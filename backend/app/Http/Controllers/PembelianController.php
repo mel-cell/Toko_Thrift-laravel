@@ -27,8 +27,7 @@ class PembelianController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
         $user = User::find(Auth::id());
-        $user = User::find(Auth::id());
-
+        
         // Validate all pakaian exist and calculate total
         $totalHarga = 0;
         $pakaians = [];
@@ -69,8 +68,9 @@ class PembelianController extends Controller
                 ]);
 
                 // Reduce stock
-                $pakaians[$index]->pakaian_stok -= $detail['pembelian_detail_jumlah'];
-                $pakaians[$index]->save();
+                $pakaians[$index]->update([
+                    'pakaian_stok' => (int)$pakaians[$index]->pakaian_stok - $detail['pembelian_detail_jumlah']
+                ]);
             }
         });
 

@@ -20,7 +20,7 @@ class AuthController extends Controller
             'user_email' => 'required|string|email|max:50|unique:users',
             'user_nohp' => 'required|string|max:13',
             'user_alamat' => 'required|string|max:200',
-            'user_level' => 'required|in:Admin,Pengguna',
+            'user_level' => 'sometimes|in:Admin,Pengguna', // Optional, defaults to Pengguna
         ]);
 
         if ($validator->fails()) {
@@ -35,7 +35,7 @@ class AuthController extends Controller
             'user_email' => $request->user_email,
             'user_nohp' => $request->user_nohp,
             'user_alamat' => $request->user_alamat,
-            'user_level' => $request->user_level,
+            'user_level' => $request->user_level ?? 'Pengguna', // Default to Pengguna if not provided
         ]);
 
         $token = $user->createToken('API Token')->plainTextToken;

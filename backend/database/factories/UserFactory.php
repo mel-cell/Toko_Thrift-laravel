@@ -21,7 +21,7 @@ class UserFactory extends Factory
             'user_nohp' => $this->faker->numerify('08##########'),
             'user_alamat' => $this->faker->address(),
             'user_profil_url' => 'url_placeholder_profil',
-            'user_level' => $this->faker->randomElement(['Admin', 'Pengguna']),
+            'user_level' => 'Pengguna', // Default to Pengguna for all generated users
         ];
     }
 }
