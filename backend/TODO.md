@@ -17,12 +17,13 @@
 - [x] Migration for pembelian_status (pending, completed, cancelled)
 
 ## Next Steps
+- [x] Implement admin update status pembelian
+- [x] Add pagination to list endpoints
+- [x] Add search/filter functionality to pakaian endpoints
 - [ ] Run migrations: php artisan migrate
 - [ ] Seed database with sample data if needed
 - [ ] Test API endpoints with Postman or similar tool
 - [ ] Implement API Resources for Pembelian and KategoriPakaian for consistent responses
-- [ ] Add pagination to list endpoints if needed
-- [ ] Add search/filter functionality to pakaian endpoints
 - [ ] Implement file upload for pakaian_gambar_url
 - [ ] Add logging for critical operations
 - [ ] Set up CORS for frontend integration

@@ -18,11 +18,22 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        KategoriPakaian::factory(20)->create();
-        Pakaian::factory(20)->create();
-        User::factory(20)->create();
-        MetodePembayaran::factory(20)->create();
-        Pembelian::factory(20)->create();
-        PembelianDetail::factory(20)->create();
+        // Create 10 categories
+        KategoriPakaian::factory(10)->create();
+
+        // Create 10 payment methods
+        MetodePembayaran::factory(10)->create();
+
+        // Create 10 users (5 Admin, 5 Pengguna)
+        User::factory()->count(2)->create(['user_level' => 'Admin']);
+        User::factory()->count(8)->create(['user_level' => 'Pengguna']);
+
+        // Create 10 products
+        Pakaian::factory(10)->create();
+
+        // Create 10 purchases with details
+        Pembelian::factory(10)->create()->each(function ($pembelian) {
+            PembelianDetail::factory(rand(1, 3))->create(['pembelian_detail_pembelian_id' => $pembelian->pembelian_id]);
+        });
     }
 }

@@ -18,6 +18,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PakaianController;
 use App\Http\Controllers\PembelianController;
 use App\Http\Controllers\AdminPakaianController;
+use App\Http\Controllers\AdminPembelianController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
@@ -51,5 +52,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/kategori-pakaian', [AdminPakaianController::class, 'storeKategoriPakaian']);
         Route::put('/kategori-pakaian/{id}', [AdminPakaianController::class, 'updateKategoriPakaian']);
         Route::delete('/kategori-pakaian/{id}', [AdminPakaianController::class, 'destroyKategoriPakaian']);
+
+        Route::get('/pembelian', [AdminPembelianController::class, 'indexPembelian']);
+        Route::get('/pembelian/{id}', [AdminPembelianController::class, 'showPembelian']);
+        Route::put('/pembelian/{id}/status', [AdminPembelianController::class, 'updateStatus']);
     });
 });

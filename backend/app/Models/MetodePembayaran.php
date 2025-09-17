@@ -14,18 +14,7 @@ class MetodePembayaran extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'metode_pembayaran_user_id',
-        'metode_pembayaran_jenis',
-        'metode_pembayaran_nomor',
+        'metode_pembayaran_nama',
+        'metode_pembayaran_deskripsi',
     ];
-
-    public function user()
-    {
-        return $this->belongsTo(User::class, 'metode_pembayaran_user_id', 'user_id');
-    }
-
-    public function pembelians()
-    {
-        return $this->hasMany(Pembelian::class, 'pembelian_metode_pembayaran_id', 'metode_pembayaran_id');
-    }
 }

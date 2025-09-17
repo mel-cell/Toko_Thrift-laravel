@@ -12,9 +12,24 @@ use App\Http\Requests\UpdatePakaianRequest;
 class AdminPakaianController extends Controller
 {
     // GET /api/admin/pakaian
-    public function indexPakaian()
+    public function indexPakaian(Request $request)
     {
-        $pakaians = Pakaian::with('kategoriPakaian')->get();
+        $query = Pakaian::with('kategoriPakaian');
+
+        // Add search filter
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where('pakaian_nama', 'like', "%{$search}%")
+                  ->orWhere('pakaian_deskrsipsi', 'like', "%{$search}%");
+        }
+
+        // Add kategori filter
+        if ($request->has('kategori')) {
+            $kategori = $request->input('kategori');
+            $query->where('pakaian_kategori_pakaian_id', $kategori);
+        }
+
+        $pakaians = $query->get();
         return response()->json($pakaians);
     }
 

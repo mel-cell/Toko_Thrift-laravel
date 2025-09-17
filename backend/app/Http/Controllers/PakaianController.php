@@ -10,9 +10,29 @@ use Illuminate\Http\Request;
 class PakaianController extends Controller
 {
     // GET /api/pakaian
-    public function index()
+    public function index(Request $request)
     {
-        $pakaians = Pakaian::with('kategoriPakaian')->get();
+        $query = Pakaian::with('kategoriPakaian');
+
+        // Search filter
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where('pakaian_nama', 'like', "%{$search}%")
+                  ->orWhere('pakaian_deskrsipsi', 'like', "%{$search}%");
+        }
+
+        // Filter by kategori
+        if ($request->has('kategori')) {
+            $kategori = $request->input('kategori');
+            $query->whereHas('kategoriPakaian', function ($q) use ($kategori) {
+                $q->where('kategori_pakaian_nama', $kategori);
+            });
+        }
+
+        // Pagination
+        $perPage = $request->input('per_page', 10);
+        $pakaians = $query->paginate($perPage);
+
         return PakaianResource::collection($pakaians);
     }
 
