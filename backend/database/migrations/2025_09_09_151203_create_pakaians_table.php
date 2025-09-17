@@ -15,6 +15,8 @@ return new class extends Migration
             $table->uuid('pakaian_id')->primary();
             $table->uuid('pakaian_kategori_pakaian_id');
             $table->string('pakaian_nama', 50);
+            $table->string('pakaian_deskrsipsi', 255);
+            $table->string('pakaian_size', 10);
             $table->string('pakaian_harga', 50);
             $table->string('pakaian_stok', 100);
             $table->string('pakaian_gambar_url', 255);

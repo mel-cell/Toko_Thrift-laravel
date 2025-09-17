@@ -16,6 +16,8 @@ class Pakaian extends Model
     protected $fillable = [
         'pakaian_kategori_pakaian_id',
         'pakaian_nama',
+        'pakaian_deskrsipsi',
+        'pakaian_size',
         'pakaian_harga',
         'pakaian_stok',
         'pakaian_gambar_url',
