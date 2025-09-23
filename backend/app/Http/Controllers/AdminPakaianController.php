@@ -6,6 +6,7 @@ use App\Models\Pakaian;
 use App\Models\KategoriPakaian;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\StorePakaianRequest;
 use App\Http\Requests\UpdatePakaianRequest;
 
@@ -49,6 +50,13 @@ class AdminPakaianController extends Controller
         $data = $request->validated();
         $data['pakaian_id'] = Str::uuid();
 
+        if ($request->hasFile('pakaian_gambar')) {
+            $file = $request->file('pakaian_gambar');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('images', $filename, 'public');
+            $data['pakaian_gambar_url'] = '/storage/' . $path;
+        }
+
         $pakaian = Pakaian::create($data);
 
         return response()->json(['message' => 'Pakaian created successfully', 'pakaian' => $pakaian], 201);
@@ -63,6 +71,19 @@ class AdminPakaianController extends Controller
         }
 
         $data = $request->validated();
+
+        if ($request->hasFile('pakaian_gambar')) {
+            // Delete old image if exists
+            if ($pakaian->pakaian_gambar_url && Storage::disk('public')->exists(str_replace('/storage/', '', $pakaian->pakaian_gambar_url))) {
+                Storage::disk('public')->delete(str_replace('/storage/', '', $pakaian->pakaian_gambar_url));
+            }
+
+            $file = $request->file('pakaian_gambar');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('images', $filename, 'public');
+            $data['pakaian_gambar_url'] = '/storage/' . $path;
+        }
+
         $pakaian->update($data);
 
         return response()->json(['message' => 'Pakaian updated successfully', 'pakaian' => $pakaian]);

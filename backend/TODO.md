@@ -1,42 +1,51 @@
-# TODO List - Laravel Backend for Toko Thrifty
+# Backend Improvements TODO
 
-## Completed Tasks
-- [x] Authentication with Laravel Sanctum (register, login, logout)
-- [x] Role-based authorization (Admin, Pengguna) using middleware CheckRole
-- [x] Public endpoints: GET /api/pakaian, GET /api/pakaian/{id}, GET /api/kategori-pakaian
-- [x] Protected endpoints: POST /api/pembelian, GET /api/pembelian, GET /api/pembelian/{id}, PUT /api/akun, POST /api/logout
-- [x] Admin endpoints: CRUD for pakaian and kategori-pakaian
-- [x] Models: User, Pakaian, KategoriPakaian, Pembelian (with status), PembelianDetail, MetodePembayaran
-- [x] Controllers: AuthController, PakaianController, PembelianController, AdminPakaianController
-- [x] Form Request validation: StorePakaianRequest, UpdatePakaianRequest
-- [x] API Resource: PakaianResource for consistent responses
-- [x] Gates in AuthServiceProvider for role checks
-- [x] Rate limiting on auth endpoints (throttle:5,1)
-- [x] Stock management in pembelian (reduce stock on purchase)
-- [x] Eager loading in queries to prevent N+1 problems
-- [x] Migration for pembelian_status (pending, completed, cancelled)
+## 1. Order Status Management ✅
+- Status field already added
+- Admin endpoints for updating status implemented
+- Status history not added yet
 
-## Next Steps
-- [x] Implement admin update status pembelian
-- [x] Add pagination to list endpoints
-- [x] Add search/filter functionality to pakaian endpoints
-- [ ] Run migrations: php artisan migrate
-- [ ] Seed database with sample data if needed
-- [ ] Test API endpoints with Postman or similar tool
-- [ ] Implement API Resources for Pembelian and KategoriPakaian for consistent responses
-- [ ] Implement file upload for pakaian_gambar_url
-- [ ] Add logging for critical operations
-- [ ] Set up CORS for frontend integration
-- [ ] Document API endpoints with OpenAPI/Swagger
-- [ ] Add unit/feature tests for controllers
-- [ ] Optimize queries and add caching if needed
-- [ ] Set up deployment configuration
+## 2. Payment Integration
+- Integrate a payment gateway (e.g., Midtrans)
+- Handle payment callbacks and confirmations
+- Update order status based on payment
 
-## Notes
-- Backend is ready for frontend integration
-- All endpoints follow RESTful conventions
-- Authentication uses Bearer tokens via Laravel Sanctum
-- Role-based access control implemented
-- Data validation using Form Requests
-- Stock management prevents overselling
-- Transaction status allows for order management
+## 3. Inventory Management
+- Add restocking endpoints
+- Low stock alerts (notifications)
+- Inventory reports for admins
+
+## 4. Notifications & Communication
+- Email notifications for orders, registration
+- Password reset emails (basic implemented, need email sending)
+- SMS notifications (optional)
+
+## 5. Product Features ✅
+- Search and filter endpoints added
+- Product reviews and ratings
+- Wishlist functionality
+
+## 6. Admin Features ✅
+- Admin dashboard endpoints (stats implemented)
+- Bulk operations for products
+- Export data
+
+## 7. Security & Validation ✅
+- Password reset functionality implemented
+- Email verification
+- Enhanced rate limiting
+
+## 8. Error Handling & Logging ✅
+- Comprehensive error responses
+- Audit logs (added logging for purchases)
+- API versioning
+
+## 9. Testing
+- Unit tests for models
+- Feature tests for controllers
+- API tests
+
+## 10. Documentation
+- API documentation with Swagger
+- Code comments
+- README updates

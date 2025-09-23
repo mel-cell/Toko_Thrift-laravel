@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 import Search from "./search";
 
-export default function Hero() {
+export default function Hero({ onSearch }) {
   return (
     <section className="relative bg-gray-100 w-full min-h-[600px] flex flex-col justify-center items-center overflow-hidden">
       <div className="absolute inset-0 w-full h-full" aria-hidden="true">
@@ -27,7 +27,7 @@ export default function Hero() {
           Give All You Need
         </h2>
         <div className="flex-grow max-w-xl">
-          <Search />
+          <Search onSearch={onSearch} />
         </div>
       </div>
     </section>

@@ -19,6 +19,8 @@ class Pembelian extends Model
         'pembelian_tanggal',
         'pembelian_total_harga',
         'pembelian_status',
+        'pembelian_alamat',
+        'pembelian_catatan',
     ];
 
     public function user()

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -16,6 +17,7 @@ class User extends Authenticatable
     protected $keyType = 'string';
 
     protected $fillable = [
+        'user_id',
         'user_username',
         'user_password',
         'user_fullname',
@@ -48,6 +50,22 @@ class User extends Authenticatable
     public function isPengguna()
     {
         return $this->user_level === 'Pengguna';
+    }
+
+    public function getAuthPassword()
+    {
+        return $this->user_password;
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($user) {
+            if (empty($user->user_id)) {
+                $user->user_id = Str::uuid();
+            }
+        });
     }
 
     public function metodePembayarans()

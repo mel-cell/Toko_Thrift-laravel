@@ -26,7 +26,7 @@ class StorePakaianRequest extends FormRequest
             'pakaian_nama' => 'required|string|max:50',
             'pakaian_harga' => 'required|string|max:50',
             'pakaian_stok' => 'required|string|max:100',
-            'pakaian_gambar_url' => 'required|string|max:255',
+            'pakaian_gambar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ];
     }
 
@@ -44,7 +44,10 @@ class StorePakaianRequest extends FormRequest
             'pakaian_nama.max' => 'Nama pakaian maksimal 50 karakter.',
             'pakaian_harga.required' => 'Harga pakaian harus diisi.',
             'pakaian_stok.required' => 'Stok pakaian harus diisi.',
-            'pakaian_gambar_url.required' => 'URL gambar pakaian harus diisi.',
+            'pakaian_gambar.required' => 'Gambar pakaian harus diupload.',
+            'pakaian_gambar.image' => 'File harus berupa gambar.',
+            'pakaian_gambar.mimes' => 'Gambar harus berformat jpeg, png, jpg, atau gif.',
+            'pakaian_gambar.max' => 'Ukuran gambar maksimal 2MB.',
         ];
     }
 }

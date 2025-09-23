@@ -1,115 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
-import Search from "../../../components/page/user/componentDashboard/search";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "../../../components/ui/button";
-
-const categories = [
-  {
-    name: "Clothing",
-    subcategories: [
-      { name: "Shirts" },
-      { name: "Pants" },
-      { name: "Jackets" },
-      { name: "Accessories" },
-    ],
-  },
-  { name: "New Arrival" },
-  { name: "Best Seller" },
-  { name: "On Discount" },
-];
-
-const products = [
-  // Sample 30 products (can be extended or fetched from API)
-  { id: 1, name: "Classic Shirt", category: "Shirts", price: 19.99, image: "/images/classic-shirt.jpg" },
-  { id: 2, name: "Denim Pants", category: "Pants", price: 29.99, image: "/images/denim-pants.jpg" },
-  { id: 3, name: "Leather Jacket", category: "Jackets", price: 59.99, image: "/images/leather-jacket.jpg" },
-  { id: 4, name: "Beanie Hat", category: "Accessories", price: 9.99, image: "/images/beanie-hat.jpg" },
-  { id: 5, name: "Casual Shirt", category: "Shirts", price: 17.99, image: "/images/casual-shirt.jpg" },
-  { id: 6, name: "Chino Pants", category: "Pants", price: 24.99, image: "/images/chino-pants.jpg" },
-  { id: 7, name: "Winter Jacket", category: "Jackets", price: 79.99, image: "/images/winter-jacket.jpg" },
-  { id: 8, name: "Leather Belt", category: "Accessories", price: 14.99, image: "/images/leather-belt.jpg" },
-  { id: 9, name: "Formal Shirt", category: "Shirts", price: 22.99, image: "/images/formal-shirt.jpg" },
-  { id: 10, name: "Cargo Pants", category: "Pants", price: 27.99, image: "/images/cargo-pants.jpg" },
-  { id: 11, name: "Rain Jacket", category: "Jackets", price: 69.99, image: "/images/rain-jacket.jpg" },
-  { id: 12, name: "Wool Scarf", category: "Accessories", price: 19.99, image: "/images/wool-scarf.jpg" },
-  { id: 13, name: "Graphic Tee", category: "Shirts", price: 15.99, image: "/images/graphic-tee.jpg" },
-  { id: 14, name: "Slim Fit Pants", category: "Pants", price: 26.99, image: "/images/slim-fit-pants.jpg" },
-  { id: 15, name: "Denim Jacket", category: "Jackets", price: 59.99, image: "/images/denim-jacket.jpg" },
-  { id: 16, name: "Baseball Cap", category: "Accessories", price: 12.99, image: "/images/baseball-cap.jpg" },
-  { id: 17, name: "Polo Shirt", category: "Shirts", price: 20.99, image: "/images/polo-shirt.jpg" },
-  { id: 18, name: "Jogger Pants", category: "Pants", price: 23.99, image: "/images/jogger-pants.jpg" },
-  { id: 19, name: "Bomber Jacket", category: "Jackets", price: 69.99, image: "/images/bomber-jacket.jpg" },
-  { id: 20, name: "Leather Gloves", category: "Accessories", price: 24.99, image: "/images/leather-gloves.jpg" },
-  { id: 21, name: "Henley Shirt", category: "Shirts", price: 18.99, image: "/images/henley-shirt.jpg" },
-  { id: 22, name: "Sweatpants", category: "Pants", price: 21.99, image: "/images/sweatpants.jpg" },
-  { id: 23, name: "Trench Coat", category: "Jackets", price: 89.99, image: "/images/trench-coat.jpg" },
-  { id: 24, name: "Beanie", category: "Accessories", price: 11.99, image: "/images/beanie.jpg" },
-  { id: 25, name: "Oxford Shirt", category: "Shirts", price: 25.99, image: "/images/oxford-shirt.jpg" },
-  { id: 26, name: "Khaki Pants", category: "Pants", price: 28.99, image: "/images/khaki-pants.jpg" },
-  { id: 27, name: "Peacoat", category: "Jackets", price: 99.99, image: "/images/peacoat.jpg" },
-  { id: 28, name: "Sunglasses", category: "Accessories", price: 29.99, image: "/images/sunglasses.jpg" },
-  { id: 29, name: "Turtleneck", category: "Shirts", price: 22.99, image: "/images/turtleneck.jpg" },
-  { id: 30, name: "Sweater", category: "Pants", price: 24.99, image: "/images/sweater.jpg" },
-];
-
-function Sidebar({ categories, selectedCategories, setSelectedCategories }) {
-  const toggleCategory = (category) => {
-    if (selectedCategories.includes(category)) {
-      setSelectedCategories(selectedCategories.filter((c) => c !== category));
-    } else {
-      setSelectedCategories([...selectedCategories, category]);
-    }
-  };
-
-  return (
-    <aside className="w-64 bg-white rounded-lg shadow p-6">
-      <h2 className="text-lg font-semibold mb-4">Category</h2>
-      <ul>
-        {categories.map((cat) => (
-          <li key={cat.name} className="mb-3">
-            {cat.subcategories ? (
-              <>
-                <div className="font-semibold mb-1">{cat.name}</div>
-                <ul className="pl-4 space-y-1">
-                  {cat.subcategories.map((sub) => (
-                    <li key={sub.name} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id={sub.name}
-                        checked={selectedCategories.includes(sub.name)}
-                        onChange={() => toggleCategory(sub.name)}
-                        className="mr-2"
-                      />
-                      <label htmlFor={sub.name} className="cursor-pointer">
-                        {sub.name}
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            ) : (
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id={cat.name}
-                  checked={selectedCategories.includes(cat.name)}
-                  onChange={() => toggleCategory(cat.name)}
-                  className="mr-2"
-                />
-                <label htmlFor={cat.name} className="cursor-pointer">
-                  {cat.name}
-                </label>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
-    </aside>
-  );
-}
-
-import { FaStar } from "react-icons/fa";
+import { getPakaian, getKategoriPakaian } from "../../../lib/api";
+import { isAuthenticated } from "../../../lib/auth";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { FaStar, FaShoppingCart, FaTshirt, FaHatCowboy, FaUserTie, FaChevronDown } from "react-icons/fa";
 
 function StarRating({ rating }) {
   const fullStars = Math.floor(rating);
@@ -119,7 +16,9 @@ function StarRating({ rating }) {
   return (
     <div className="flex items-center text-yellow-400 text-sm">
       {[...Array(fullStars)].map((_, i) => (
-        <FaStar key={`full-${i}`} className="w-4 h-4 fill-current" />
+        <svg key={`full-${i}`} className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+          <path d="M10 15l-5.878 3.09 1.123-6.545L.49 6.91l6.561-.955L10 0l2.949 5.955 6.561.955-4.755 4.635 1.123 6.545z" />
+        </svg>
       ))}
       {halfStar && (
         <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
@@ -133,71 +32,272 @@ function StarRating({ rating }) {
         </svg>
       )}
       {[...Array(emptyStars)].map((_, i) => (
-        <FaStar key={`empty-${i}`} className="w-4 h-4 fill-gray-300" />
+        <svg key={`empty-${i}`} className="w-4 h-4 fill-gray-300" viewBox="0 0 20 20">
+          <path d="M10 15l-5.878 3.09 1.123-6.545L.49 6.91l6.561-.955L10 0l2.949 5.955 6.561.955-4.755 4.635 1.123 6.545z" />
+        </svg>
       ))}
     </div>
   );
 }
 
-import Link from "next/link";
+function Sidebar({ categories, selectedCategories, setSelectedCategories }) {
+  const [expanded, setExpanded] = useState(true);
+
+  const toggleCategory = (categoryId) => {
+    if (selectedCategories.includes(categoryId)) {
+      setSelectedCategories(selectedCategories.filter((c) => c !== categoryId));
+    } else {
+      setSelectedCategories([...selectedCategories, categoryId]);
+    }
+  };
+
+  return (
+    <aside className="w-64 bg-white rounded-lg shadow p-6">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center justify-between w-full text-lg font-semibold mb-4"
+      >
+        Category
+        <FaChevronDown className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
+      </button>
+      {expanded && (
+        <ul>
+          {categories.map((cat) => (
+            <li key={cat.kategori_pakaian_id} className="mb-3">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={cat.kategori_pakaian_id}
+                  checked={selectedCategories.includes(cat.kategori_pakaian_id)}
+                  onChange={() => toggleCategory(cat.kategori_pakaian_id)}
+                  className="mr-2"
+                />
+                <label htmlFor={cat.kategori_pakaian_id} className="cursor-pointer">
+                  {cat.kategori_pakaian_nama}
+                </label>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </aside>
+  );
+}
 
 function Card({ product }) {
+  const router = useRouter();
+
+  const addToCart = () => {
+    if (!isAuthenticated()) {
+      router.push('/login');
+      return;
+    }
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const existingItem = cart.find(item => item.id === product.id);
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      cart.push({ ...product, quantity: 1 });
+    }
+    localStorage.setItem('cart', JSON.stringify(cart));
+
+    // Dispatch cart update event for header notification
+    window.dispatchEvent(new Event('cartUpdated'));
+  };
+
+  const buyNow = () => {
+    if (!isAuthenticated()) {
+      router.push('/login');
+      return;
+    }
+    addToCart();
+    router.push(`/shop/${product.id}`);
+  };
+
   return (
     <Link href={`/shop/${product.id}`} className="block">
-      <div className="bg-white rounded-lg shadow p-4 flex flex-col h-96 hover:shadow-lg transition-shadow duration-300">
+      <div className="bg-white rounded-lg shadow p-4 flex flex-col h-100 hover:shadow-lg transition-shadow duration-300">
         <div className="relative">
           <img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-48 object-contain rounded"
+            src={product.gambar_url || '/placeholder.jpg'}
+            alt={product.nama}
+            className="w-full h-55 object-contain rounded"
           />
           <span className="absolute top-2 right-2 bg-gray-200 text-xs px-2 py-1 rounded">
-            {product.category}
+            {product.kategori?.nama || 'No Category'}
           </span>
         </div>
-        <h3 className="mt-2 font-semibold">{product.name}</h3>
-        <StarRating rating={product.rating || 5} />
-        <p className="text-sm text-gray-500">{product.reviews || "No Reviews"}</p>
-        <p className="mt-1 font-bold">${product.price.toFixed(2)}</p>
-        <div className="mt-auto flex space-x-2">
-          <Button variant="outline" className="flex-1">
+        <h3 className="mt-2 font-semibold text-black">{product.nama}</h3>
+        <p className="mt-1 font-bold text-black">Rp {parseInt(product.harga).toLocaleString()}</p>
+        <div className="mt-2 flex items-center">
+          <StarRating rating={4} />
+          <span className="ml-2 text-sm text-gray-600">4.0 (10 reviews)</span>
+        </div>
+        <div className="mt-4 flex space-x-2">
+          <Button variant="outline" className="flex-1" onClick={(e) => { e.preventDefault(); addToCart(); }}>
             Add to Cart
           </Button>
-          <Button className="flex-1">Buy Now</Button>
+          <Button className="flex-1" onClick={(e) => { e.preventDefault(); buyNow(); }}>Buy Now</Button>
         </div>
       </div>
     </Link>
   );
 }
 
-export default function ShopPage() {
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
+function Pagination({ currentPage, totalPages, onPageChange }) {
+  const pageNumbers = [];
 
-  const filteredProducts = products
-    .filter((p) =>
-      selectedCategories.length === 0 ? true : selectedCategories.includes(p.category)
-    )
-    .filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
-    .slice(0, 30);
+  for (let i = 1; i <= totalPages; i++) {
+    if (i <= 3 || i === totalPages) {
+      pageNumbers.push(i);
+    } else if (i === 4) {
+      pageNumbers.push("...");
+    }
+  }
 
   return (
-    <>
-      <main className="container mx-auto px-12 py-8 flex space-x-9 mt-20">
+    <div className="mt-6 flex justify-between items-center text-sm text-gray-600">
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="hover:underline disabled:opacity-50"
+      >
+        Previous
+      </button>
+      <div>
+        {pageNumbers.map((num, idx) =>
+          num === "..." ? (
+            <span key={idx} className="mx-1">
+              ...
+            </span>
+          ) : (
+            <button
+              key={num}
+              onClick={() => onPageChange(num)}
+              className={`px-2 py-1 rounded mr-1 ${
+                currentPage === num ? "bg-gray-200" : "hover:bg-gray-200"
+              }`}
+            >
+              {num}
+            </button>
+          )
+        )}
+      </div>
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="hover:underline disabled:opacity-50"
+      >
+        Next
+      </button>
+    </div>
+  );
+}
+
+export default function ShopPage() {
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(true);
+  const productsPerPage = 9;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [pakaianRes, kategoriRes] = await Promise.all([
+          getPakaian(),
+          getKategoriPakaian()
+        ]);
+        setProducts(Array.isArray(pakaianRes) ? pakaianRes : []);
+        setCategories(Array.isArray(kategoriRes) ? kategoriRes : []);
+        setCurrentPage(1);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setProducts([]);
+        setCategories([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const filteredProducts = useMemo(() => {
+    if (!products || !Array.isArray(products)) return [];
+
+    return selectedCategories.length === 0
+      ? products
+      : products.filter((p) => p.kategori?.id && selectedCategories.includes(p.kategori.id));
+  }, [products, selectedCategories]);
+
+  const totalPages = Math.ceil((filteredProducts?.length || 0) / productsPerPage);
+
+  const displayedProducts = useMemo(() => {
+    if (!filteredProducts || !Array.isArray(filteredProducts)) return [];
+    return filteredProducts.slice(
+      (currentPage - 1) * productsPerPage,
+      currentPage * productsPerPage
+    );
+  }, [filteredProducts, currentPage, productsPerPage]);
+
+  const handlePageChange = (page) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+  };
+
+  // Show loading state
+  if (loading) {
+    return <div className="text-center py-8 mt-20">Loading...</div>;
+  }
+
+  // Ensure products are loaded before rendering
+  if (!products || !Array.isArray(products)) {
+    return <div className="text-center py-8 mt-20">Loading products...</div>;
+  }
+
+  return (
+    <div className={`container mx-auto px-12 py-8 ${showSidebar ? 'flex space-x-9' : ''} mt-20`}>
+      {showSidebar && (
         <Sidebar
           categories={categories}
           selectedCategories={selectedCategories}
-          setSelectedCategories={setSelectedCategories}
+          setSelectedCategories={(cats) => {
+            setSelectedCategories(cats);
+            setCurrentPage(1);
+          }}
         />
-        <section className="flex-1">
-          <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-          <div className="grid grid-cols-3 gap-6 mt-6">
-            {filteredProducts.map((product) => (
-              <Card key={product.id} product={product} />
-            ))}
+      )}
+
+      <section className="flex-1">
+        <div className="mb-4">
+          <Button onClick={() => setShowSidebar(!showSidebar)} variant="outline">
+            {showSidebar ? 'Hide Filters' : 'Show Filters'}
+          </Button>
+        </div>
+
+        {displayedProducts.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-600 text-lg">No products found.</p>
+            <p className="text-gray-500 mt-2">Try adjusting your filters or search terms.</p>
           </div>
-        </section>
-      </main>
-    </>
+        ) : (
+          <>
+            <div className="grid grid-cols-3 gap-6">
+              {displayedProducts.map((product) => (
+                <Card key={product.id} product={product} />
+              ))}
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </>
+        )}
+      </section>
+    </div>
   );
 }

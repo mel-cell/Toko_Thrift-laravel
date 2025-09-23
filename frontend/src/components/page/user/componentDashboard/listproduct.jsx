@@ -1,88 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { Button } from "../../../ui/button";
-import { FaShoppingCart, FaTshirt, FaHatCowboy, FaUserTie, FaStar } from "react-icons/fa";
-
-const categories = [
-  {
-    name: "Clothing",
-    icon: <FaTshirt className="inline mr-2" />,
-    subcategories: [
-      { name: "Shirts", icon: <FaTshirt className="inline mr-2" /> },
-      { name: "Pants", icon: <FaUserTie className="inline mr-2" /> },
-      { name: "Jackets", icon: <FaHatCowboy className="inline mr-2" /> },
-      { name: "Accessories", icon: <FaStar className="inline mr-2" /> },
-    ],
-  },
-  {
-    name: "New Arrival",
-    icon: <FaStar className="inline mr-2" />,
-  },
-  {
-    name: "Best Seller",
-    icon: <FaStar className="inline mr-2" />,
-  },
-  {
-    name: "On Discount",
-    icon: <FaStar className="inline mr-2" />,
-  },
-];
-
-const products = [
-  {
-    id: 1,
-    name: "Classic Shirt",
-    category: "Shirts",
-    rating: 4.5,
-    reviews: "150 Reviews",
-    price: 19.99,
-    image: "/images/classic-shirt.jpg",
-  },
-  {
-    id: 2,
-    name: "Denim Pants",
-    category: "Pants",
-    rating: 4.7,
-    reviews: "200 Reviews",
-    price: 29.99,
-    image: "/images/denim-pants.jpg",
-  },
-  {
-    id: 3,
-    name: "Leather Jacket",
-    category: "Jackets",
-    rating: 4.8,
-    reviews: "180 Reviews",
-    price: 59.99,
-    image: "/images/leather-jacket.jpg",
-  },
-  {
-    id: 4,
-    name: "Beanie Hat",
-    category: "Accessories",
-    rating: 4.2,
-    reviews: "90 Reviews",
-    price: 9.99,
-    image: "/images/beanie-hat.jpg",
-  },
-  {
-    id: 5,
-    name: "Casual Shirt",
-    category: "Shirts",
-    rating: 4.3,
-    reviews: "120 Reviews",
-    price: 17.99,
-    image: "/images/casual-shirt.jpg",
-  },
-  {
-    id: 6,
-    name: "Chino Pants",
-    category: "Pants",
-    rating: 4.6,
-    reviews: "140 Reviews",
-    price: 24.99,
-    image: "/images/chino-pants.jpg",
-  },
-];
+import { FaShoppingCart, FaTshirt, FaHatCowboy, FaUserTie, FaStar, FaChevronDown } from "react-icons/fa";
+import { getPakaian, getKategoriPakaian } from "../../../../lib/api";
+import { isAuthenticated } from "../../../../lib/auth";
+import { useRouter } from "next/navigation";
 
 function StarRating({ rating }) {
   const fullStars = Math.floor(rating);
@@ -117,91 +39,103 @@ function StarRating({ rating }) {
 }
 
 function Sidebar({ categories, selectedCategories, setSelectedCategories }) {
-  const toggleCategory = (category) => {
-    if (selectedCategories.includes(category)) {
-      setSelectedCategories(selectedCategories.filter((c) => c !== category));
+  const [expanded, setExpanded] = useState(true);
+
+  const toggleCategory = (categoryId) => {
+    if (selectedCategories.includes(categoryId)) {
+      setSelectedCategories(selectedCategories.filter((c) => c !== categoryId));
     } else {
-      setSelectedCategories([...selectedCategories, category]);
+      setSelectedCategories([...selectedCategories, categoryId]);
     }
   };
 
   return (
     <aside className="w-64 bg-white rounded-lg shadow p-6">
-      <h2 className="text-lg font-semibold mb-4">Category</h2>
-      <ul>
-        {categories.map((cat) => (
-          <li key={cat.name} className="mb-3">
-            {cat.subcategories ? (
-              <>
-                <div className="font-semibold mb-1 flex items-center">
-                  {cat.icon}
-                  <span>{cat.name}</span>
-                </div>
-                <ul className="pl-4 space-y-1">
-                  {cat.subcategories.map((sub) => (
-                    <li key={sub.name} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id={sub.name}
-                        checked={selectedCategories.includes(sub.name)}
-                        onChange={() => toggleCategory(sub.name)}
-                        className="mr-2"
-                      />
-                      <label htmlFor={sub.name} className="cursor-pointer flex items-center">
-                        {sub.icon}
-                        {sub.name}
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            ) : (
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center justify-between w-full text-lg font-semibold mb-4"
+      >
+        Category
+        <FaChevronDown className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
+      </button>
+      {expanded && (
+        <ul>
+          {categories.map((cat) => (
+            <li key={cat.kategori_pakaian_id} className="mb-3">
               <div className="flex items-center">
                 <input
                   type="checkbox"
-                  id={cat.name}
-                  checked={selectedCategories.includes(cat.name)}
-                  onChange={() => toggleCategory(cat.name)}
+                  id={cat.kategori_pakaian_id}
+                  checked={selectedCategories.includes(cat.kategori_pakaian_id)}
+                  onChange={() => toggleCategory(cat.kategori_pakaian_id)}
                   className="mr-2"
                 />
-                <label htmlFor={cat.name} className="cursor-pointer flex items-center">
-                  {cat.icon}
-                  {cat.name}
+                <label htmlFor={cat.kategori_pakaian_id} className="cursor-pointer">
+                  {cat.kategori_pakaian_nama}
                 </label>
               </div>
-            )}
-          </li>
-        ))}
-      </ul>
+            </li>
+          ))}
+        </ul>
+      )}
     </aside>
   );
 }
 
-import Link from "next/link";
-
 function Card({ product }) {
+  const router = useRouter();
+
+  const addToCart = () => {
+    if (!isAuthenticated()) {
+      router.push('/login');
+      return;
+    }
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const existingItem = cart.find(item => item.id === product.id);
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      cart.push({ ...product, quantity: 1 });
+    }
+    localStorage.setItem('cart', JSON.stringify(cart));
+
+    // Dispatch cart update event for header notification
+    window.dispatchEvent(new Event('cartUpdated'));
+  };
+
+  const buyNow = () => {
+    if (!isAuthenticated()) {
+      router.push('/login');
+      return;
+    }
+    addToCart();
+    router.push(`/shop/${product.id}`);
+  };
+
   return (
     <Link href={`/shop/${product.id}`} className="block">
-      <div className="bg-white rounded-lg shadow p-4 flex flex-col h-96 hover:shadow-lg transition-shadow duration-300">
+      <div className="bg-white rounded-lg shadow p-4 flex flex-col h-100 hover:shadow-lg transition-shadow duration-300">
         <div className="relative">
           <img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-48 object-contain rounded"
+            src={product.gambar_url || '/placeholder.jpg'}
+            alt={product.nama}
+            className="w-full h-55 object-contain rounded"
           />
           <span className="absolute top-2 right-2 bg-gray-200 text-xs px-2 py-1 rounded">
-            {product.category}
+            {product.kategori?.nama || 'No Category'}
           </span>
         </div>
-        <h3 className="mt-2 font-semibold">{product.name}</h3>
-        <StarRating rating={product.rating} />
-        <p className="text-sm text-gray-500">{product.reviews}</p>
-        <p className="mt-1 font-bold">${product.price.toFixed(2)}</p>
+        <h3 className="mt-2 font-semibold text-black">{product.nama}</h3>
+        <p className="mt-1 font-bold text-black">Rp {parseInt(product.harga).toLocaleString()}</p>
+        <div className="mt-2 flex items-center">
+          <StarRating rating={4} />
+          <span className="ml-2 text-sm text-gray-600">4.0 (10 reviews)</span>
+        </div>
         <div className="mt-4 flex space-x-2">
-          <Button variant="outline" className="flex-1">
+          <Button variant="outline" className="flex-1" onClick={(e) => { e.preventDefault(); addToCart(); }}>
             Add to Cart
           </Button>
-          <Button className="flex-1">Buy Now</Button>
+          <Button className="flex-1" onClick={(e) => { e.preventDefault(); buyNow(); }}>Buy Now</Button>
         </div>
       </div>
     </Link>
@@ -258,51 +192,115 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
   );
 }
 
-export default function ListProduct() {
+export default function ListProduct({ searchTerm = '' }) {
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const productsPerPage = 9;
 
-  const filteredProducts =
-    selectedCategories.length === 0
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const params = debouncedSearchTerm ? { search: debouncedSearchTerm } : {};
+        const [pakaianRes, kategoriRes] = await Promise.all([
+          getPakaian(params),
+          getKategoriPakaian()
+        ]);
+        setProducts(Array.isArray(pakaianRes) ? pakaianRes : []);
+        setCategories(Array.isArray(kategoriRes) ? kategoriRes : []);
+        setCurrentPage(1); // Reset to first page on search
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [debouncedSearchTerm]);
+
+  const filteredProducts = useMemo(() => {
+    if (!products || !Array.isArray(products)) return [];
+
+    return selectedCategories.length === 0
       ? products
-      : products.filter((p) => selectedCategories.includes(p.category));
+      : products.filter((p) => p.kategori?.id && selectedCategories.includes(p.kategori.id));
+  }, [products, selectedCategories]);
 
-  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+  const totalPages = Math.ceil((filteredProducts?.length || 0) / productsPerPage);
 
-  const displayedProducts = filteredProducts.slice(
-    (currentPage - 1) * productsPerPage,
-    currentPage * productsPerPage
-  );
+  const displayedProducts = useMemo(() => {
+    if (!filteredProducts || !Array.isArray(filteredProducts)) return [];
+    return filteredProducts.slice(
+      (currentPage - 1) * productsPerPage,
+      currentPage * productsPerPage
+    );
+  }, [filteredProducts, currentPage, productsPerPage]);
 
   const handlePageChange = (page) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
   };
 
+  // Show loading state
+  if (loading) {
+    return <div className="text-center py-8">Loading...</div>;
+  }
+
+  // Ensure products are loaded before rendering
+  if (!products || !Array.isArray(products)) {
+    return <div className="text-center py-8">Loading products...</div>;
+  }
+
   return (
-    <div className="flex space-x-9 container mx-auto px-12 py-8">
-      <Sidebar
-        categories={categories}
-        selectedCategories={selectedCategories}
-        setSelectedCategories={(cats) => {
-          setSelectedCategories(cats);
-          setCurrentPage(1);
-        }}
-      />
+    <div className={`container mx-auto px-12 py-8 ${showSidebar ? 'flex space-x-9' : ''}`}>
+      {showSidebar && (
+        <Sidebar
+          categories={categories}
+          selectedCategories={selectedCategories}
+          setSelectedCategories={(cats) => {
+            setSelectedCategories(cats);
+            setCurrentPage(1);
+          }}
+        />
+      )}
 
       <section className="flex-1">
-        <div className="grid grid-cols-3 gap-6">
-          {displayedProducts.map((product) => (
-            <Card key={product.id} product={product} />
-          ))}
+        <div className="mb-4">
+          <Button onClick={() => setShowSidebar(!showSidebar)} variant="outline">
+            {showSidebar ? 'Hide Filters' : 'Show Filters'}
+          </Button>
         </div>
+        {displayedProducts.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-600 text-lg">No products found.</p>
+            <p className="text-gray-500 mt-2">Try adjusting your filters or search terms.</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-3 gap-6">
+              {displayedProducts.map((product) => (
+                <Card key={product.id} product={product} />
+              ))}
+            </div>
 
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-        />
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </>
+        )}
       </section>
     </div>
   );

@@ -17,6 +17,8 @@ class PakaianResource extends JsonResource
         return [
             'id' => $this->pakaian_id,
             'nama' => $this->pakaian_nama,
+            'deskripsi' => $this->pakaian_deskripsi,
+            'size' => $this->pakaian_size,
             'harga' => $this->pakaian_harga,
             'stok' => $this->pakaian_stok,
             'gambar_url' => $this->pakaian_gambar_url,

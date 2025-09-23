@@ -23,13 +23,17 @@ use App\Http\Controllers\AdminPembelianController;
 // Public routes
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 Route::get('/pakaian', [PakaianController::class, 'index']);
+Route::get('/pakaian/search', [PakaianController::class, 'search']);
 Route::get('/pakaian/{id}', [PakaianController::class, 'show']);
 Route::get('/kategori-pakaian', [PakaianController::class, 'kategoriPakaian']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/metode-pembayaran', [PembelianController::class, 'getMetodePembayaran']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
 
@@ -38,6 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/pembelian', [PembelianController::class, 'store']);
         Route::get('/pembelian', [PembelianController::class, 'index']);
         Route::get('/pembelian/{id}', [PembelianController::class, 'show']);
+        Route::put('/pembelian/{id}/cancel', [PembelianController::class, 'cancel']);
         Route::put('/akun', [PembelianController::class, 'updateAkun']);
     });
 
@@ -56,5 +61,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/pembelian', [AdminPembelianController::class, 'indexPembelian']);
         Route::get('/pembelian/{id}', [AdminPembelianController::class, 'showPembelian']);
         Route::put('/pembelian/{id}/status', [AdminPembelianController::class, 'updateStatus']);
+        Route::get('/stats', [AdminPembelianController::class, 'stats']);
     });
 });

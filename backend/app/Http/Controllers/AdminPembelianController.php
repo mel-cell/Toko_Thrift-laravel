@@ -38,7 +38,7 @@ class AdminPembelianController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:pending,completed,cancelled',
+            'status' => 'required|in:pending,processing,shipped,delivered,cancelled',
         ]);
 
         $pembelian = Pembelian::find($id);
@@ -48,6 +48,26 @@ class AdminPembelianController extends Controller
 
         $pembelian->update(['pembelian_status' => $request->status]);
 
-        return response()->json(['message' => 'Pembelian status updated successfully', 'pembelian' => $pembelian]);
+        return response()->json(['message' => 'Status updated successfully', 'pembelian' => $pembelian]);
+    }
+
+    // GET /api/admin/stats
+    public function stats()
+    {
+        $totalOrders = Pembelian::count();
+        $pendingOrders = Pembelian::where('pembelian_status', 'pending')->count();
+        $completedOrders = Pembelian::where('pembelian_status', 'completed')->count();
+        $totalRevenue = Pembelian::where('pembelian_status', 'completed')->sum('pembelian_total_harga');
+        $totalUsers = \App\Models\User::count();
+        $totalProducts = \App\Models\Pakaian::count();
+
+        return response()->json([
+            'total_orders' => $totalOrders,
+            'pending_orders' => $pendingOrders,
+            'completed_orders' => $completedOrders,
+            'total_revenue' => $totalRevenue,
+            'total_users' => $totalUsers,
+            'total_products' => $totalProducts,
+        ]);
     }
 }

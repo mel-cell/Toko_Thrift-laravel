@@ -1,19 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-export default function Search() {
+export default function Search({ onSearch }) {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    // Implement search logic or navigation here
-    alert(`Searching for: ${searchTerm}`);
-  };
+  useEffect(() => {
+    if (onSearch) {
+      onSearch(searchTerm);
+    }
+  }, [searchTerm, onSearch]);
 
   return (
-    <form
-      onSubmit={handleSearch}
-      className="w-full flex rounded-md overflow-hidden shadow-lg bg-white"
-    >
+    <div className="w-full flex rounded-md overflow-hidden shadow-lg bg-white">
       <input
         type="text"
         placeholder="Search on Stuffsus"
@@ -22,11 +19,12 @@ export default function Search() {
         className="flex-grow px-4 py-3 text-gray-900 focus:outline-none"
       />
       <button
-        type="submit"
+        type="button"
         className="bg-black text-white px-6 py-3 font-semibold hover:bg-gray-900 transition"
+        onClick={() => {}}
       >
         Search
       </button>
-    </form>
+    </div>
   );
 }
