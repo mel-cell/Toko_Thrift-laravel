@@ -6,7 +6,8 @@ import { getPakaian, getKategoriPakaian } from "../../../lib/api";
 import { isAuthenticated } from "../../../lib/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FaStar, FaShoppingCart, FaTshirt, FaHatCowboy, FaUserTie, FaChevronDown } from "react-icons/fa";
+import { FaStar, FaShoppingCart, FaTshirt, FaHatCowboy, FaUserTie, FaChevronDown, FaSearch } from "react-icons/fa";
+import AuthButton from "../../../components/auth/AuthButton";
 
 function StarRating({ rating }) {
   const fullStars = Math.floor(rating);
@@ -40,16 +41,43 @@ function StarRating({ rating }) {
   );
 }
 
-function Sidebar({ categories, selectedCategories, setSelectedCategories }) {
+function Sidebar({ categories, selectedCategories, setSelectedCategories, products }) {
   const [expanded, setExpanded] = useState(true);
 
+  // Remove duplicates based on kategori_pakaian_id and sort alphabetically
+  const uniqueCategories = categories.filter((category, index, self) =>
+    index === self.findIndex((c) => c.kategori_pakaian_id === category.kategori_pakaian_id)
+  );
+  const sortedCategories = uniqueCategories.sort((a, b) => {
+    const nameA = a.kategori_pakaian_nama || '';
+    const nameB = b.kategori_pakaian_nama || '';
+    return nameA.localeCompare(nameB);
+  });
+
+  // Calculate product count for each category and filter out categories with 0 products
+  const categoryCounts = sortedCategories
+    .map((cat) => {
+      const count = products.filter((p) => p.kategori?.id === cat.kategori_pakaian_id).length;
+      return { ...cat, count };
+    })
+    .filter((cat) => cat.count > 0)
+    .slice(0, 10); // Limit to 10 categories
+
   const toggleCategory = (categoryId) => {
-    if (selectedCategories.includes(categoryId)) {
-      setSelectedCategories(selectedCategories.filter((c) => c !== categoryId));
+    if (validSelectedCategories.includes(categoryId)) {
+      setSelectedCategories(validSelectedCategories.filter((c) => c !== categoryId));
     } else {
-      setSelectedCategories([...selectedCategories, categoryId]);
+      setSelectedCategories([...validSelectedCategories, categoryId]);
     }
   };
+
+  const clearFilters = () => {
+    setSelectedCategories([]);
+  };
+
+  // Filter selectedCategories to only include available categories
+  const availableCategoryIds = categoryCounts.map((cat) => cat.kategori_pakaian_id);
+  const validSelectedCategories = selectedCategories.filter((id) => availableCategoryIds.includes(id));
 
   return (
     <aside className="w-64 bg-white rounded-lg shadow p-6">
@@ -61,24 +89,36 @@ function Sidebar({ categories, selectedCategories, setSelectedCategories }) {
         <FaChevronDown className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
       </button>
       {expanded && (
-        <ul>
-          {categories.map((cat) => (
-            <li key={cat.kategori_pakaian_id} className="mb-3">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id={cat.kategori_pakaian_id}
-                  checked={selectedCategories.includes(cat.kategori_pakaian_id)}
-                  onChange={() => toggleCategory(cat.kategori_pakaian_id)}
-                  className="mr-2"
-                />
-                <label htmlFor={cat.kategori_pakaian_id} className="cursor-pointer">
-                  {cat.kategori_pakaian_nama}
-                </label>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <>
+          {selectedCategories.length > 0 && (
+            <div className="mb-4">
+              <Button onClick={clearFilters} variant="outline" size="sm" className="w-full">
+                Clear Filters
+              </Button>
+            </div>
+          )}
+          <ul>
+            {categoryCounts.map((cat) => (
+              <li key={cat.kategori_pakaian_id} className="mb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={cat.kategori_pakaian_id}
+                      checked={selectedCategories.includes(cat.kategori_pakaian_id)}
+                      onChange={() => toggleCategory(cat.kategori_pakaian_id)}
+                      className="mr-2"
+                    />
+                    <label htmlFor={cat.kategori_pakaian_id} className="cursor-pointer">
+                      {cat.kategori_pakaian_nama}
+                    </label>
+                  </div>
+                  <span className="text-sm text-gray-500">({cat.count})</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </aside>
   );
@@ -88,10 +128,6 @@ function Card({ product }) {
   const router = useRouter();
 
   const addToCart = () => {
-    if (!isAuthenticated()) {
-      router.push('/login');
-      return;
-    }
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     const existingItem = cart.find(item => item.id === product.id);
     if (existingItem) {
@@ -106,10 +142,6 @@ function Card({ product }) {
   };
 
   const buyNow = () => {
-    if (!isAuthenticated()) {
-      router.push('/login');
-      return;
-    }
     addToCart();
     router.push(`/shop/${product.id}`);
   };
@@ -134,10 +166,10 @@ function Card({ product }) {
           <span className="ml-2 text-sm text-gray-600">4.0 (10 reviews)</span>
         </div>
         <div className="mt-4 flex space-x-2">
-          <Button variant="outline" className="flex-1" onClick={(e) => { e.preventDefault(); addToCart(); }}>
-            Add to Cart
-          </Button>
-          <Button className="flex-1" onClick={(e) => { e.preventDefault(); buyNow(); }}>Buy Now</Button>
+           <Button variant="outline" className="flex-1 border border-gray-300 bg-white text-gray-900 py-2 px-4 rounded hover:bg-gray-50 transition-colors" onClick={(e) => { e.preventDefault(); addToCart(); }}>
+                      Add to Cart
+                    </Button>
+                    <Button className="flex-1 bg-gray-950 text-white py-2 px-4 rounded hover:bg-gray-800 transition-colors" onClick={(e) => { e.preventDefault(); buyNow(); }}>Buy Now</Button>
         </div>
       </div>
     </Link>
@@ -201,18 +233,32 @@ export default function ShopPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [showSidebar, setShowSidebar] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const productsPerPage = 9;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const params = debouncedSearchTerm ? { search: debouncedSearchTerm } : {};
         const [pakaianRes, kategoriRes] = await Promise.all([
-          getPakaian(),
+          getPakaian(params),
           getKategoriPakaian()
         ]);
-        setProducts(Array.isArray(pakaianRes) ? pakaianRes : []);
-        setCategories(Array.isArray(kategoriRes) ? kategoriRes : []);
-        setCurrentPage(1);
+        // Handle both direct arrays and paginated responses
+        const productsData = Array.isArray(pakaianRes) ? pakaianRes : (pakaianRes?.data || []);
+        const categoriesData = Array.isArray(kategoriRes) ? kategoriRes : (kategoriRes?.data || []);
+
+        setProducts(productsData);
+        setCategories(categoriesData);
+        setCurrentPage(1); // Reset to first page on search
       } catch (error) {
         console.error('Error fetching data:', error);
         setProducts([]);
@@ -222,15 +268,35 @@ export default function ShopPage() {
       }
     };
     fetchData();
-  }, []);
+  }, [debouncedSearchTerm]);
+
+  // Filter selectedCategories to only include available categories
+  const availableCategoryIds = categories
+    .filter((category, index, self) =>
+      index === self.findIndex((c) => c.kategori_pakaian_id === category.kategori_pakaian_id)
+    )
+    .sort((a, b) => {
+      const nameA = a.kategori_pakaian_nama || '';
+      const nameB = b.kategori_pakaian_nama || '';
+      return nameA.localeCompare(nameB);
+    })
+    .map((cat) => {
+      const count = products.filter((p) => p.kategori?.id === cat.kategori_pakaian_id).length;
+      return { ...cat, count };
+    })
+    .filter((cat) => cat.count > 0)
+    .slice(0, 10)
+    .map((cat) => cat.kategori_pakaian_id);
+
+  const validSelectedCategories = selectedCategories.filter((id) => availableCategoryIds.includes(id));
 
   const filteredProducts = useMemo(() => {
     if (!products || !Array.isArray(products)) return [];
 
-    return selectedCategories.length === 0
+    return validSelectedCategories.length === 0
       ? products
-      : products.filter((p) => p.kategori?.id && selectedCategories.includes(p.kategori.id));
-  }, [products, selectedCategories]);
+      : products.filter((p) => p.kategori?.id && validSelectedCategories.includes(p.kategori.id));
+  }, [products, validSelectedCategories]);
 
   const totalPages = Math.ceil((filteredProducts?.length || 0) / productsPerPage);
 
@@ -262,19 +328,32 @@ export default function ShopPage() {
       {showSidebar && (
         <Sidebar
           categories={categories}
-          selectedCategories={selectedCategories}
+          selectedCategories={validSelectedCategories}
           setSelectedCategories={(cats) => {
             setSelectedCategories(cats);
             setCurrentPage(1);
           }}
+          products={products}
         />
       )}
 
       <section className="flex-1">
-        <div className="mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <Button onClick={() => setShowSidebar(!showSidebar)} variant="outline">
             {showSidebar ? 'Hide Filters' : 'Show Filters'}
           </Button>
+
+          {/* Search Input */}
+          <div className="relative">
+            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent w-64"
+            />
+          </div>
         </div>
 
         {displayedProducts.length === 0 ? (

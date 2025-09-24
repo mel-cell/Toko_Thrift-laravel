@@ -16,19 +16,13 @@ class AuthController extends Controller
     {
         $rules = [
             'user_username' => 'required|string|max:50|unique:users',
-            'user_password' => 'required|string|min:8',
+            'user_password' => 'required|string|min:6',
             'user_fullname' => 'required|string|max:100',
             'user_email' => 'required|string|email|max:50|unique:users',
             'user_nohp' => 'required|string|max:13',
             'user_alamat' => 'required|string|max:200',
             'user_level' => 'sometimes|in:Admin,Pengguna', // Optional, defaults to Pengguna
         ];
-
-        // Strict validation for Admin users
-        if ($request->user_level === 'Admin') {
-            $rules['user_password'] = 'required|string|min:8|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/';
-            $rules['user_email'] = 'required|string|email|max:50|unique:users|regex:/@tugva\.org$/';
-        }
 
         $validator = Validator::make($request->all(), $rules);
 
@@ -38,7 +32,7 @@ class AuthController extends Controller
 
         $user = User::create([
             'user_username' => $request->user_username,
-            'user_password' => $request->user_password,
+            'user_password' => Hash::make($request->user_password),
             'user_fullname' => $request->user_fullname,
             'user_email' => $request->user_email,
             'user_nohp' => $request->user_nohp,

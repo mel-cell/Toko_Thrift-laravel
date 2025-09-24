@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "../../ui/button";
+import AuthButton from "../../auth/AuthButton";
 import { getPakaian } from "../../../../lib/api";
 import { isAuthenticated } from "../../../../lib/auth";
 import { useRouter } from "next/navigation";
@@ -87,10 +88,22 @@ function ProductCard({ product }) {
           <span className="ml-2 text-sm text-gray-600">4.0 (10 reviews)</span>
         </div>
         <div className="mt-4 flex space-x-2">
-          <Button variant="outline" className="flex-1" onClick={(e) => { e.preventDefault(); addToCart(); }}>
-            Add to Cart
-          </Button>
-          <Button className="flex-1" onClick={(e) => { e.preventDefault(); buyNow(); }}>Buy Now</Button>
+         <AuthButton
+                       className="flex-1 bg-gray-950 text-white py-3 px-6 rounded-lg hover:bg-gray-800 transition-colors font-medium"
+                       onClick={handleBuyNow}
+                       requireAuth={true}
+                       fallbackText="Login to Buy"
+                     >
+                       Buy Now
+                     </AuthButton>
+                     <AuthButton
+                       className="flex-1 bg-gray-200 text-gray-800 py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                       onClick={handleAddToCart}
+                       requireAuth={true}
+                       fallbackText="Login to Add"
+                     >
+                       Add To Cart
+                     </AuthButton>
         </div>
       </div>
     </Link>

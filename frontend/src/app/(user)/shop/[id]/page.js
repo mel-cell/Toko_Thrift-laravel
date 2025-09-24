@@ -8,6 +8,7 @@ import PurchaseModal from "@/components/PurchaseModal";
 import RelatedProducts from "@/components/RelatedProducts";
 import { isAuthenticated } from "../../../../lib/auth";
 import { useRouter } from "next/navigation";
+import AuthButton from "@/components/auth/AuthButton";
 
 function StarRating({ rating }) {
   const fullStars = Math.floor(rating);
@@ -49,19 +50,20 @@ export default function ProductDetail({ params }) {
   const router = useRouter();
 
   const handleAddToCart = () => {
-    if (!isAuthenticated()) {
-      router.push('/login');
-      return;
-    }
     // Add to cart logic here
-    alert('Added to cart! (Authentication required)');
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const existingItem = cart.find(item => item.id === product.id);
+    if (existingItem) {
+      existingItem.quantity += quantity;
+    } else {
+      cart.push({ ...product, quantity: quantity });
+    }
+    localStorage.setItem('cart', JSON.stringify(cart));
+    window.dispatchEvent(new Event('cartUpdated'));
+    alert('Added to cart!');
   };
 
   const handleBuyNow = () => {
-    if (!isAuthenticated()) {
-      router.push('/login');
-      return;
-    }
     setShowPurchaseModal(true);
   };
 
@@ -154,22 +156,22 @@ export default function ProductDetail({ params }) {
 
           {/* Buttons */}
           <div className="mt-6 flex space-x-4">
-            <Button
-              variant="default"
-              size="default"
-              className="flex-1"
+            <AuthButton
+              className="flex-1 bg-gray-950 text-white py-3 px-6 rounded-lg hover:bg-gray-800 transition-colors font-medium"
               onClick={handleBuyNow}
+              requireAuth={true}
+              fallbackText="Login to Buy"
             >
               Buy Now
-            </Button>
-            <Button
-              variant="outline"
-              size="default"
-              className="flex-1"
+            </AuthButton>
+            <AuthButton
+              className="flex-1 bg-gray-200 text-gray-800 py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors font-medium"
               onClick={handleAddToCart}
+              requireAuth={true}
+              fallbackText="Login to Add"
             >
               Add To Cart
-            </Button>
+            </AuthButton>
           </div>
 
           {/* Additional Product Information */}

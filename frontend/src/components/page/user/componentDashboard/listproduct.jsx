@@ -5,6 +5,7 @@ import { FaShoppingCart, FaTshirt, FaHatCowboy, FaUserTie, FaStar, FaChevronDown
 import { getPakaian, getKategoriPakaian } from "../../../../lib/api";
 import { isAuthenticated } from "../../../../lib/auth";
 import { useRouter } from "next/navigation";
+import AuthButton from "../../../auth/AuthButton";
 
 function StarRating({ rating }) {
   const fullStars = Math.floor(rating);
@@ -38,8 +39,27 @@ function StarRating({ rating }) {
   );
 }
 
-function Sidebar({ categories, selectedCategories, setSelectedCategories }) {
+function Sidebar({ categories, selectedCategories, setSelectedCategories, products }) {
   const [expanded, setExpanded] = useState(true);
+
+  // Remove duplicates based on kategori_pakaian_id and sort alphabetically
+  const uniqueCategories = categories.filter((category, index, self) =>
+    index === self.findIndex((c) => c.kategori_pakaian_id === category.kategori_pakaian_id)
+  );
+  const sortedCategories = uniqueCategories.sort((a, b) => {
+    const nameA = a.kategori_pakaian_nama || '';
+    const nameB = b.kategori_pakaian_nama || '';
+    return nameA.localeCompare(nameB);
+  });
+
+  // Calculate product count for each category and filter out categories with 0 products
+  const categoryCounts = sortedCategories
+    .map((cat) => {
+      const count = products.filter((p) => p.kategori?.id === cat.kategori_pakaian_id).length;
+      return { ...cat, count };
+    })
+    .filter((cat) => cat.count > 0)
+    .slice(0, 10); // Limit to 10 categories
 
   const toggleCategory = (categoryId) => {
     if (selectedCategories.includes(categoryId)) {
@@ -47,6 +67,10 @@ function Sidebar({ categories, selectedCategories, setSelectedCategories }) {
     } else {
       setSelectedCategories([...selectedCategories, categoryId]);
     }
+  };
+
+  const clearFilters = () => {
+    setSelectedCategories([]);
   };
 
   return (
@@ -59,24 +83,36 @@ function Sidebar({ categories, selectedCategories, setSelectedCategories }) {
         <FaChevronDown className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
       </button>
       {expanded && (
-        <ul>
-          {categories.map((cat) => (
-            <li key={cat.kategori_pakaian_id} className="mb-3">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id={cat.kategori_pakaian_id}
-                  checked={selectedCategories.includes(cat.kategori_pakaian_id)}
-                  onChange={() => toggleCategory(cat.kategori_pakaian_id)}
-                  className="mr-2"
-                />
-                <label htmlFor={cat.kategori_pakaian_id} className="cursor-pointer">
-                  {cat.kategori_pakaian_nama}
-                </label>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <>
+          {selectedCategories.length > 0 && (
+            <div className="mb-4">
+              <Button onClick={clearFilters} variant="outline" size="sm" className="w-full">
+                Clear Filters
+              </Button>
+            </div>
+          )}
+          <ul>
+            {categoryCounts.map((cat) => (
+              <li key={cat.kategori_pakaian_id} className="mb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={cat.kategori_pakaian_id}
+                      checked={selectedCategories.includes(cat.kategori_pakaian_id)}
+                      onChange={() => toggleCategory(cat.kategori_pakaian_id)}
+                      className="mr-2"
+                    />
+                    <label htmlFor={cat.kategori_pakaian_id} className="cursor-pointer">
+                      {cat.kategori_pakaian_nama}
+                    </label>
+                  </div>
+                  <span className="text-sm text-gray-500">({cat.count})</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </aside>
   );
@@ -132,10 +168,22 @@ function Card({ product }) {
           <span className="ml-2 text-sm text-gray-600">4.0 (10 reviews)</span>
         </div>
         <div className="mt-4 flex space-x-2">
-          <Button variant="outline" className="flex-1" onClick={(e) => { e.preventDefault(); addToCart(); }}>
-            Add to Cart
-          </Button>
-          <Button className="flex-1" onClick={(e) => { e.preventDefault(); buyNow(); }}>Buy Now</Button>
+         <AuthButton
+                       className="flex-1 bg-gray-950 text-white py-3 px-6 rounded-lg hover:bg-gray-800 transition-colors font-medium"
+                       onClick={buyNow}
+                       requireAuth={true}
+                       fallbackText="Login to Buy"
+                     >
+                       Buy Now
+                     </AuthButton>
+                     <AuthButton
+                       className="flex-1 bg-gray-200 text-gray-800 py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                       onClick={addToCart}
+                       requireAuth={true}
+                       fallbackText="Login to Add"
+                     >
+                       Add To Cart
+                     </AuthButton>
         </div>
       </div>
     </Link>
@@ -217,11 +265,17 @@ export default function ListProduct({ searchTerm = '' }) {
           getPakaian(params),
           getKategoriPakaian()
         ]);
-        setProducts(Array.isArray(pakaianRes) ? pakaianRes : []);
-        setCategories(Array.isArray(kategoriRes) ? kategoriRes : []);
+        // Handle both direct arrays and paginated responses
+        const productsData = Array.isArray(pakaianRes) ? pakaianRes : (pakaianRes?.data || []);
+        const categoriesData = Array.isArray(kategoriRes) ? kategoriRes : (kategoriRes?.data || []);
+
+        setProducts(productsData);
+        setCategories(categoriesData);
         setCurrentPage(1); // Reset to first page on search
       } catch (error) {
         console.error('Error fetching data:', error);
+        setProducts([]);
+        setCategories([]);
       } finally {
         setLoading(false);
       }
@@ -272,6 +326,7 @@ export default function ListProduct({ searchTerm = '' }) {
             setSelectedCategories(cats);
             setCurrentPage(1);
           }}
+          products={products}
         />
       )}
 

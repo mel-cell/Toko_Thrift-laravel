@@ -30,7 +30,16 @@ export default function RegisterPage() {
     try {
       const data = await register(form);
       localStorage.setItem("token", data.token);
-      router.push("/dashboard");
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      // Redirect based on user role
+      if (data.user.user_level === 'Admin') {
+        router.push("/admin/products");
+      } else if (data.user.user_level === 'Pengguna') {
+        router.push("/dashboard");
+      } else {
+        router.push("/dashboard"); // Default fallback
+      }
     } catch (err) {
       setError(err.message || "Registration failed");
     } finally {

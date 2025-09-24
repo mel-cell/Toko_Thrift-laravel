@@ -1,44 +1,9 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Button } from "../../../ui/button";
-
-const products = [
-  {
-    id: 1,
-    name: "TWS Bujug",
-    category: "Other",
-    rating: 5.0,
-    reviews: "1.2k Reviews",
-    price: 29.9,
-    image: "/images/tws-bujug.jpg",
-  },
-  {
-    id: 2,
-    name: "Headsound Baptis",
-    category: "Music",
-    rating: 5.0,
-    reviews: "1.2k Reviews",
-    price: 12.0,
-    image: "/images/headsound-baptis.jpg",
-  },
-  {
-    id: 3,
-    name: "Adudu Cleaner",
-    category: "Other",
-    rating: 4.4,
-    reviews: "1k Reviews",
-    price: 29.9,
-    image: "/images/adudu-cleaner.jpg",
-  },
-  {
-    id: 4,
-    name: "Adudu Cleaner",
-    category: "Other",
-    rating: 4.4,
-    reviews: "1k Reviews",
-    price: 29.9,
-    image: "/images/adudu-cleaner.jpg",
-  },
-];
+import AuthButton from "../../../auth/AuthButton";
+import { getPakaian } from "../../../../lib/api";
+import { isAuthenticated } from "../../../../lib/auth";
+import { useRouter } from "next/navigation";
 
 function StarRating({ rating }) {
   const fullStars = Math.floor(rating);
@@ -72,8 +37,95 @@ function StarRating({ rating }) {
   );
 }
 
+function ProductCard({ product }) {
+  const router = useRouter();
+
+  const addToCart = () => {
+    if (!isAuthenticated()) {
+      router.push('/login');
+      return;
+    }
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const existingItem = cart.find(item => item.id === product.id);
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      cart.push({ ...product, quantity: 1 });
+    }
+    localStorage.setItem('cart', JSON.stringify(cart));
+
+    // Dispatch cart update event for header notification
+    window.dispatchEvent(new Event('cartUpdated'));
+  };
+
+  const buyNow = () => {
+    if (!isAuthenticated()) {
+      router.push('/login');
+      return;
+    }
+    addToCart();
+    router.push(`/shop/${product.id}`);
+  };
+
+  return (
+    <div className="min-w-[420px] bg-white rounded-lg shadow p-4 flex-shrink-0 h-100 flex flex-col">
+      <div className="relative">
+        <img
+          src={product.gambar_url || '/placeholder.jpg'}
+          alt={product.nama}
+          className="w-full h-48 object-contain rounded"
+        />
+        <span className="absolute top-2 right-2 bg-gray-200 text-xs px-2 py-1 rounded">
+          {product.kategori?.nama || 'No Category'}
+        </span>
+      </div>
+      <h3 className="mt-2 font-semibold">{product.nama}</h3>
+      <StarRating rating={4} />
+      <p className="text-sm text-gray-500">4.0 (10 reviews)</p>
+      <p className="mt-1 font-bold">Rp {parseInt(product.harga).toLocaleString()}</p>
+      <div className="mt-auto flex space-x-2">
+        <AuthButton
+          className="flex-1 bg-gray-950 text-white py-3 px-6 rounded-lg hover:bg-gray-800 transition-colors font-medium"
+          onClick={buyNow}
+          requireAuth={true}
+          fallbackText="Login to Buy"
+        >
+          Buy Now
+        </AuthButton>
+        <AuthButton
+          className="flex-1 bg-gray-200 text-gray-800 py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+          onClick={addToCart}
+          requireAuth={true}
+          fallbackText="Login to Add"
+        >
+          Add To Cart
+        </AuthButton>
+      </div>
+    </div>
+  );
+}
+
 export default function RecommendationProduct() {
   const scrollRef = useRef(null);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await getPakaian();
+        // Get 4 random products
+        const shuffled = Array.isArray(data) ? data.sort(() => 0.5 - Math.random()) : [];
+        setProducts(shuffled.slice(0, 4));
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const scroll = (direction) => {
     if (scrollRef.current) {
@@ -83,6 +135,23 @@ export default function RecommendationProduct() {
       });
     }
   };
+
+  if (loading) {
+    return (
+      <section className="max-w-7xl mx-auto px-4 py-8">
+        <h2 className="text-[30px] font-semibold mb-4">Explore our recommendations</h2>
+        <div className="flex space-x-6 overflow-x-auto">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="min-w-[420px] bg-white rounded-lg shadow p-4 animate-pulse">
+              <div className="h-48 bg-gray-200 rounded mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="max-w-7xl mx-auto px-4 py-8">
@@ -100,30 +169,7 @@ export default function RecommendationProduct() {
           className="flex space-x-6 overflow-x-auto scrollbar-hide scroll-smooth"
         >
           {products.map((product) => (
-            <div key={product.id} className="min-w-[420px] bg-white rounded-lg shadow p-4 flex-shrink-0 h-100 flex flex-col">
-              <div className="relative">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-48 object-contain rounded"
-                />
-                <span className="absolute top-2 right-2 bg-gray-200 text-xs px-2 py-1 rounded">
-                  {product.category}
-                </span>
-              </div>
-              <h3 className="mt-2 font-semibold">{product.name}</h3>
-              <StarRating rating={product.rating} />
-              <p className="text-sm text-gray-500">{product.reviews}</p>
-              <p className="mt-1 font-bold">${product.price.toFixed(2)}</p>
-              <div className="mt-auto flex space-x-2">
-                <Button variant="outline" className="flex-1">
-                  Add to Cart
-                </Button>
-                <Button className="flex-1">
-                  Buy Now
-                </Button>
-              </div>
-            </div>
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
         <button

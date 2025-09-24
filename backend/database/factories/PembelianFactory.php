@@ -19,6 +19,8 @@ class PembelianFactory extends Factory
             'pembelian_metode_pembayaran_id' => MetodePembayaran::factory(),
             'pembelian_tanggal' => $this->faker->dateTime(),
             'pembelian_total_harga' => $this->faker->numberBetween(100000, 1000000),
+            'pembelian_alamat' => $this->faker->address(),
+            'pembelian_catatan' => $this->faker->optional()->sentence(),
         ];
     }
 }

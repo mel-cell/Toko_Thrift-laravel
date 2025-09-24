@@ -1,15 +1,24 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { login, logout, getCurrentUser, isAuthenticated } from "../lib/auth";
-import DashboardPage from '../app/(user)/dashboard/page'
-import DashboardLayout from '../app/(user)/dashboard/layout'
+import React, { useState } from "react";
+import Hero from "@/components/page/user/componentDashboard/hero";
+import Search from "@/components/page/user/componentDashboard/search";
+import ListProduct from "@/components/page/user/componentDashboard/listproduct";
+import RecommendationProduct from "@/components/page/user/componentDashboard/rekomendationproduct";
+import CTA from "@/components/page/user/componentDashboard/cta";
+import DashboardLayout from "@/app/(user)/dashboard/layout";
 
 export default function Home() {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+  };
+
   return (
-    <DashboardLayout>
-      <DashboardPage />
-    </DashboardLayout>
+    <div>
+     <DashboardLayout />
+    </div>
   );
 }
+

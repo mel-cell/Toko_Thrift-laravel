@@ -24,8 +24,9 @@ class DatabaseSeeder extends Seeder
         // Create 10 payment methods
         MetodePembayaran::factory(10)->create();
 
+        $this->call(AdminUserSeeder::class);
+
         // Create 10 users (5 Admin, 5 Pengguna)
-        User::factory()->count(2)->create(['user_level' => 'Admin']);
         User::factory()->count(8)->create(['user_level' => 'Pengguna']);
 
         // Create 10 products

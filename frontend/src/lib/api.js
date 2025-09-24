@@ -1,21 +1,49 @@
-  import axios from 'axios';
+import axios from 'axios';
 import { getAuthHeader } from './auth';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
-// Auth APIs
-export async function login(user_username, user_password) {
-  const response = await axios.post(`${API_URL}/login`, { user_username, user_password });
-  if (response.data.token) {
-    localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data.user));
+// Set up axios defaults
+axios.defaults.withCredentials = false;
+
+export const fetcher = axios.create({
+  baseURL: API_URL,
+});
+
+fetcher.interceptors.request.use(
+  (config) => {
+    const headers = getAuthHeader();
+    if (headers.Authorization) {
+      config.headers.Authorization = headers.Authorization;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return response.data;
+);
+
+// Auth APIs
+export async function login(credentials) {
+  try {
+    const response = await axios.post(`${API_URL}/login`, credentials);
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Login failed');
+  }
 }
 
 export async function register(userData) {
-  const response = await axios.post(`${API_URL}/register`, userData);
-  return response.data;
+  try {
+    const response = await axios.post(`${API_URL}/register`, userData);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Registration failed');
+  }
 }
 
 export async function logout() {
@@ -107,6 +135,12 @@ export async function getAdminPakaian() {
   return response.data;
 }
 
+export async function getAdminPakaianById(id) {
+  const headers = getAuthHeader();
+  const response = await axios.get(`${API_URL}/admin/pakaian/${id}`, { headers });
+  return response.data;
+}
+
 export async function createPakaian(pakaianData) {
   const headers = getAuthHeader();
   const response = await axios.post(`${API_URL}/admin/pakaian`, pakaianData, { headers });
@@ -149,8 +183,57 @@ export async function getAdminPembelian() {
   return response.data;
 }
 
+export async function getAdminPembelianById(id) {
+  const headers = getAuthHeader();
+  const response = await axios.get(`${API_URL}/admin/pembelian/${id}`, { headers });
+  return response.data;
+}
+
 export async function updatePembelianStatus(id, statusData) {
   const headers = getAuthHeader();
   const response = await axios.put(`${API_URL}/admin/pembelian/${id}/status`, statusData, { headers });
+  return response.data;
+}
+
+export async function createAdminPembelian(pembelianData) {
+  const headers = getAuthHeader();
+  const response = await axios.post(`${API_URL}/admin/pembelian`, pembelianData, { headers });
+  return response.data;
+}
+
+export async function updateAdminPembelian(id, pembelianData) {
+  const headers = getAuthHeader();
+  const response = await axios.put(`${API_URL}/admin/pembelian/${id}`, pembelianData, { headers });
+  return response.data;
+}
+
+export async function deleteAdminPembelian(id) {
+  const headers = getAuthHeader();
+  const response = await axios.delete(`${API_URL}/admin/pembelian/${id}`, { headers });
+  return response.data;
+}
+
+// Admin User APIs
+export async function getAdminUsers() {
+  const headers = getAuthHeader();
+  const response = await axios.get(`${API_URL}/admin/users`, { headers });
+  return response.data;
+}
+
+export async function createAdminUser(userData) {
+  const headers = getAuthHeader();
+  const response = await axios.post(`${API_URL}/admin/users`, userData, { headers });
+  return response.data;
+}
+
+export async function updateAdminUser(id, userData) {
+  const headers = getAuthHeader();
+  const response = await axios.put(`${API_URL}/admin/users/${id}`, userData, { headers });
+  return response.data;
+}
+
+export async function deleteAdminUser(id) {
+  const headers = getAuthHeader();
+  const response = await axios.delete(`${API_URL}/admin/users/${id}`, { headers });
   return response.data;
 }

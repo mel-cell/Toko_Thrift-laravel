@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { login } from "../../../lib/api";
 import image from "next/image";
+import Cookies from "js-cookie";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,9 +23,20 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await login(form.user_username, form.user_password);
-      localStorage.setItem("token", data.token);
-      router.push("/dashboard");
+      const data = await login({ user_username: form.user_username, user_password: form.user_password });
+      Cookies.set("token", data.token);
+      Cookies.set("user", JSON.stringify(data.user));
+
+      console.log('User logged in:', data.user);
+
+      // Redirect based on user role
+      if (data.user.user_level === 'Admin') {
+        router.push("/admin");
+      } else if (data.user.user_level === 'Pengguna') {
+        router.push("/dashboard");
+      } else {
+        router.push("/dashboard"); // Default fallback
+      }
     } catch (err) {
       setError(err.message || "Login failed");
     } finally {

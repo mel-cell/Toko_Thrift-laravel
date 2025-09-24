@@ -1,12 +1,22 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { getKategoriPakaian, createKategoriPakaian, updateKategoriPakaian, deleteKategoriPakaian } from "../../../src/lib/api";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Loader2, Plus, Edit, Trash2, Search } from "lucide-react";
+import { getKategoriPakaian, createKategoriPakaian, updateKategoriPakaian, deleteKategoriPakaian } from "../../../lib/api";
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [editing, setEditing] = useState(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [form, setForm] = useState({ kategori_pakaian_nama: '' });
 
   useEffect(() => {
@@ -42,74 +52,145 @@ export default function AdminCategories() {
   const handleEdit = (category) => {
     setEditing(category);
     setForm({ kategori_pakaian_nama: category.kategori_pakaian_nama });
+    setIsDialogOpen(true);
   };
 
   const handleDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this category?')) {
-      try {
-        await deleteKategoriPakaian(id);
-        fetchCategories();
-      } catch (error) {
-        console.error("Failed to delete category", error);
-      }
+    try {
+      await deleteKategoriPakaian(id);
+      fetchCategories();
+    } catch (error) {
+      console.error("Failed to delete category", error);
     }
   };
 
   const resetForm = () => {
     setEditing(null);
+    setIsDialogOpen(false);
     setForm({ kategori_pakaian_nama: '' });
   };
 
-  if (loading) return <div>Loading categories...</div>;
+  const handleNewCategory = () => {
+    resetForm();
+    setIsDialogOpen(true);
+  };
+
+  const filteredCategories = categories.filter(category =>
+    category.kategori_pakaian_nama.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading categories...</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Manage Categories</h1>
-
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow mb-6">
-        <h2 className="text-xl font-semibold mb-4">{editing ? 'Edit Category' : 'Add New Category'}</h2>
-        <input
-          type="text"
-          placeholder="Category Name"
-          value={form.kategori_pakaian_nama}
-          onChange={(e) => setForm({...form, kategori_pakaian_nama: e.target.value})}
-          className="w-full border px-3 py-2 rounded"
-          required
-        />
-        <div className="flex space-x-2 mt-4">
-          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-            {editing ? 'Update' : 'Create'}
-          </button>
-          {editing && (
-            <button type="button" onClick={resetForm} className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
-              Cancel
-            </button>
-          )}
-        </div>
-      </form>
-
-      <div className="bg-white p-6 rounded shadow">
-        <h2 className="text-xl font-semibold mb-4">Category List</h2>
-        <table className="w-full">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left p-2">Name</th>
-              <th className="text-left p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {categories.map(category => (
-              <tr key={category.kategori_pakaian_id} className="border-b">
-                <td className="p-2">{category.kategori_pakaian_nama}</td>
-                <td className="p-2">
-                  <button onClick={() => handleEdit(category)} className="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
-                  <button onClick={() => handleDelete(category.kategori_pakaian_id)} className="text-red-600 hover:text-red-800">Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Manage Categories</h1>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={handleNewCategory}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Category
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editing ? 'Edit Category' : 'Add New Category'}</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Category Name</Label>
+                <Input
+                  id="name"
+                  placeholder="Category Name"
+                  value={form.kategori_pakaian_nama}
+                  onChange={(e) => setForm({...form, kategori_pakaian_nama: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button type="button" variant="outline" onClick={resetForm}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  {editing ? 'Update' : 'Create'}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center space-x-2">
+            <Search className="h-4 w-4" />
+            <Input
+              placeholder="Search categories..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredCategories.map(category => (
+                <TableRow key={category.kategori_pakaian_id}>
+                  <TableCell className="font-medium">{category.kategori_pakaian_nama}</TableCell>
+                  <TableCell>
+                    <div className="flex space-x-2">
+                      <Button variant="outline" size="sm" onClick={() => handleEdit(category)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently delete the category.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(category.kategori_pakaian_id)}>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          {filteredCategories.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              No categories found.
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

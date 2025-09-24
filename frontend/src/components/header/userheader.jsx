@@ -183,7 +183,7 @@ export default function UserHeader() {
             <Button asChild variant="outline" className="hidden sm:inline-flex">
               <Link href="/login">Login</Link>
             </Button>
-            <Button asChild className="bg-black hover:bg-purple-700">
+            <Button asChild className="bg-black hover:bg-gray-700">
               <Link href="/register">Sign Up</Link>
             </Button>
           </div>

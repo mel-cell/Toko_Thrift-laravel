@@ -37,10 +37,7 @@ class User extends Authenticatable
         'user_level' => 'string',
     ];
 
-    public function setUserPasswordAttribute($value)
-    {
-        $this->attributes['user_password'] = bcrypt($value);
-    }
+
 
     public function isAdmin()
     {

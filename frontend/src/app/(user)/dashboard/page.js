@@ -13,7 +13,6 @@ export default function DashboardPage() {
   const handleSearch = (term) => {
     setSearchTerm(term);
   };
-
   return (
     <div>
       <Hero />
@@ -23,5 +22,4 @@ export default function DashboardPage() {
     </div>
   );
 }
-
 

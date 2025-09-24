@@ -19,6 +19,7 @@ use App\Http\Controllers\PakaianController;
 use App\Http\Controllers\PembelianController;
 use App\Http\Controllers\AdminPakaianController;
 use App\Http\Controllers\AdminPembelianController;
+use App\Http\Controllers\AdminUserController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
@@ -30,6 +31,11 @@ Route::get('/pakaian', [PakaianController::class, 'index']);
 Route::get('/pakaian/search', [PakaianController::class, 'search']);
 Route::get('/pakaian/{id}', [PakaianController::class, 'show']);
 Route::get('/kategori-pakaian', [PakaianController::class, 'kategoriPakaian']);
+
+Route::get('/sanctum/csrf-cookie', function () {
+    return response()->json(['message' => 'CSRF cookie set']);
+});
+
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -48,6 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Admin routes
     Route::middleware('checkrole:Admin')->prefix('admin')->group(function () {
+        Route::apiResource('users', AdminUserController::class);
         Route::post('/pakaian', [AdminPakaianController::class, 'storePakaian']);
         Route::get('/pakaian', [AdminPakaianController::class, 'indexPakaian']);
         Route::get('/pakaian/{id}', [AdminPakaianController::class, 'showPakaian']);
