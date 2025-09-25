@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Button } from "../../ui/button";
-import AuthButton from "../../auth/AuthButton";
+import AuthButton from "../../../auth/AuthButton";
 import { getPakaian } from "../../../../lib/api";
 import { isAuthenticated } from "../../../../lib/auth";
 import { useRouter } from "next/navigation";
@@ -70,37 +69,44 @@ function ProductCard({ product }) {
 
   return (
     <Link href={`/shop/${product.id}`} className="block">
-      <div className="bg-white rounded-lg shadow p-4 flex flex-col h-100 hover:shadow-lg transition-shadow duration-300">
+      <div className="bg-white rounded-lg shadow p-3 md:p-4 flex flex-col h-full hover:shadow-lg transition-shadow duration-300">
         <div className="relative">
           <img
             src={product.gambar_url || '/placeholder.jpg'}
             alt={product.nama}
-            className="w-full h-55 object-contain rounded"
+            className="w-full h-40 md:h-48 lg:h-55 object-contain rounded"
           />
           <span className="absolute top-2 right-2 bg-gray-200 text-xs px-2 py-1 rounded">
             {product.kategori?.nama || 'No Category'}
           </span>
         </div>
-        <h3 className="mt-2 font-semibold text-black">{product.nama}</h3>
-        <p className="mt-1 font-bold text-black">Rp {parseInt(product.harga).toLocaleString()}</p>
+        <h3 className="mt-2 font-semibold text-black text-sm md:text-base line-clamp-2">{product.nama}</h3>
+        <p className="mt-1 font-bold text-black text-sm md:text-base">Rp {parseInt(product.harga).toLocaleString()}</p>
         <div className="mt-2 flex items-center">
           <StarRating rating={4} />
-          <span className="ml-2 text-sm text-gray-600">4.0 (10 reviews)</span>
+          <span className="ml-2 text-xs md:text-sm text-gray-600">4.0 (10 reviews)</span>
         </div>
-        <div className="mt-4 flex space-x-2">
+        <div className="mt-3 md:mt-4 flex flex-col sm:flex-row gap-2">
          <AuthButton
-                       className="flex-1 bg-gray-950 text-white py-3 px-6 rounded-lg hover:bg-gray-800 transition-colors font-medium"
-                       onClick={handleBuyNow}
+                       className="flex-1 bg-gray-950 text-white py-2 md:py-3 px-3 md:px-6 rounded-lg hover:bg-gray-800 transition-colors font-medium text-sm md:text-base"
+                       onClick={(e) => {
+                         e.preventDefault();
+                         buyNow();
+                       }}
                        requireAuth={true}
                        fallbackText="Login to Buy"
                      >
                        Buy Now
                      </AuthButton>
                      <AuthButton
-                       className="flex-1 bg-gray-200 text-gray-800 py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                       onClick={handleAddToCart}
+                       className="flex-1 bg-gray-200 text-gray-800 py-2 md:py-3 px-3 md:px-6 rounded-lg hover:bg-gray-300 transition-colors font-medium text-sm md:text-base"
+                       onClick={(e) => {
+                         e.preventDefault();
+                         addToCart();
+                       }}
                        requireAuth={true}
                        fallbackText="Login to Add"
+                       showNotification={false}
                      >
                        Add To Cart
                      </AuthButton>
@@ -132,13 +138,13 @@ export default function RelatedProducts() {
 
   if (loading) {
     return (
-      <section className="py-12 bg-gray-50">
-        <div className="container mx-auto px-12">
-          <h2 className="text-2xl font-bold mb-8">You Might Also Like</h2>
-          <div className="grid grid-cols-3 gap-6">
+      <section className="py-8 md:py-12 bg-gray-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-12">
+          <h2 className="text-xl md:text-2xl font-bold mb-6 md:mb-8">You Might Also Like</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white rounded-lg shadow p-4 animate-pulse">
-                <div className="h-55 bg-gray-200 rounded mb-4"></div>
+              <div key={i} className="bg-white rounded-lg shadow p-3 md:p-4 animate-pulse">
+                <div className="h-40 md:h-48 lg:h-55 bg-gray-200 rounded mb-4"></div>
                 <div className="h-4 bg-gray-200 rounded mb-2"></div>
                 <div className="h-4 bg-gray-200 rounded w-2/3"></div>
               </div>
@@ -150,10 +156,10 @@ export default function RelatedProducts() {
   }
 
   return (
-    <section className="py-12 bg-gray-50">
-      <div className="container mx-auto px-12">
-        <h2 className="text-2xl font-bold mb-8">You Might Also Like</h2>
-        <div className="grid grid-cols-3 gap-6">
+    <section className="py-8 md:py-12 bg-gray-50">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-12">
+        <h2 className="text-xl md:text-2xl font-bold mb-6 md:mb-8">You Might Also Like</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

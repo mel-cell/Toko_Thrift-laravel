@@ -80,10 +80,10 @@ function Sidebar({ categories, selectedCategories, setSelectedCategories, produc
   const validSelectedCategories = selectedCategories.filter((id) => availableCategoryIds.includes(id));
 
   return (
-    <aside className="w-64 bg-white rounded-lg shadow p-6">
+    <aside className="w-full lg:w-64 bg-white rounded-lg shadow p-4 sm:p-6">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex items-center justify-between w-full text-lg font-semibold mb-4"
+        className="flex items-center justify-between w-full text-base sm:text-lg font-semibold mb-3 sm:mb-4"
       >
         Category
         <FaChevronDown className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
@@ -91,29 +91,29 @@ function Sidebar({ categories, selectedCategories, setSelectedCategories, produc
       {expanded && (
         <>
           {selectedCategories.length > 0 && (
-            <div className="mb-4">
-              <Button onClick={clearFilters} variant="outline" size="sm" className="w-full">
+            <div className="mb-3 sm:mb-4">
+              <Button onClick={clearFilters} variant="outline" size="sm" className="w-full text-sm">
                 Clear Filters
               </Button>
             </div>
           )}
-          <ul>
+          <ul className="space-y-2 sm:space-y-3">
             {categoryCounts.map((cat) => (
-              <li key={cat.kategori_pakaian_id} className="mb-3">
+              <li key={cat.kategori_pakaian_id} className="pb-2">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center">
+                  <div className="flex items-center flex-1 min-w-0">
                     <input
                       type="checkbox"
                       id={cat.kategori_pakaian_id}
                       checked={selectedCategories.includes(cat.kategori_pakaian_id)}
                       onChange={() => toggleCategory(cat.kategori_pakaian_id)}
-                      className="mr-2"
+                      className="mr-2 flex-shrink-0"
                     />
-                    <label htmlFor={cat.kategori_pakaian_id} className="cursor-pointer">
+                    <label htmlFor={cat.kategori_pakaian_id} className="cursor-pointer text-sm sm:text-base truncate">
                       {cat.kategori_pakaian_nama}
                     </label>
                   </div>
-                  <span className="text-sm text-gray-500">({cat.count})</span>
+                  <span className="text-xs sm:text-sm text-gray-500 ml-2 flex-shrink-0">({cat.count})</span>
                 </div>
               </li>
             ))}
@@ -148,28 +148,41 @@ function Card({ product }) {
 
   return (
     <Link href={`/shop/${product.id}`} className="block">
-      <div className="bg-white rounded-lg shadow p-4 flex flex-col h-100 hover:shadow-lg transition-shadow duration-300">
+      <div className="bg-white rounded-lg shadow p-3 sm:p-4 flex flex-col h-full hover:shadow-lg transition-shadow duration-300">
         <div className="relative">
           <img
             src={product.gambar_url || '/placeholder.jpg'}
             alt={product.nama}
-            className="w-full h-55 object-contain rounded"
+            className="w-full h-40 sm:h-48 lg:h-55 object-contain rounded"
           />
           <span className="absolute top-2 right-2 bg-gray-200 text-xs px-2 py-1 rounded">
             {product.kategori?.nama || 'No Category'}
           </span>
         </div>
-        <h3 className="mt-2 font-semibold text-black">{product.nama}</h3>
-        <p className="mt-1 font-bold text-black">Rp {parseInt(product.harga).toLocaleString()}</p>
+        <h3 className="mt-2 font-semibold text-black text-sm sm:text-base line-clamp-2">{product.nama}</h3>
+        <p className="mt-1 font-bold text-black text-sm sm:text-base">Rp {parseInt(product.harga).toLocaleString()}</p>
         <div className="mt-2 flex items-center">
           <StarRating rating={4} />
-          <span className="ml-2 text-sm text-gray-600">4.0 (10 reviews)</span>
+          <span className="ml-2 text-xs sm:text-sm text-gray-600">4.0 (10 reviews)</span>
         </div>
-        <div className="mt-4 flex space-x-2">
-           <Button variant="outline" className="flex-1 border border-gray-300 bg-white text-gray-900 py-2 px-4 rounded hover:bg-gray-50 transition-colors" onClick={(e) => { e.preventDefault(); addToCart(); }}>
-                      Add to Cart
-                    </Button>
-                    <Button className="flex-1 bg-gray-950 text-white py-2 px-4 rounded hover:bg-gray-800 transition-colors" onClick={(e) => { e.preventDefault(); buyNow(); }}>Buy Now</Button>
+        <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+          <AuthButton
+                                 className="flex-1 bg-gray-950 text-white py-2 md:py-3 px-3 md:px-6 rounded-lg hover:bg-gray-800 transition-colors font-medium text-sm md:text-base"
+                                 onClick={buyNow}
+                                 requireAuth={true}
+                                 fallbackText="Login to Buy"
+                               >
+                                 Buy Now
+                               </AuthButton>
+                               <AuthButton
+                                 className="flex-1 bg-gray-200 text-gray-800 py-2 md:py-3 px-3 md:px-6 rounded-lg hover:bg-gray-300 transition-colors font-medium text-sm md:text-base"
+                                 onClick={addToCart}
+                                 requireAuth={true}
+                                 fallbackText="Login to Add"
+                                 showNotification={false}
+                               >
+                                 Add To Cart
+                               </AuthButton>
         </div>
       </div>
     </Link>
@@ -324,59 +337,65 @@ export default function ShopPage() {
   }
 
   return (
-    <div className={`container mx-auto px-12 py-8 ${showSidebar ? 'flex space-x-9' : ''} mt-20`}>
-      {showSidebar && (
-        <Sidebar
-          categories={categories}
-          selectedCategories={validSelectedCategories}
-          setSelectedCategories={(cats) => {
-            setSelectedCategories(cats);
-            setCurrentPage(1);
-          }}
-          products={products}
-        />
-      )}
-
-      <section className="flex-1">
-        <div className="mb-4 flex items-center justify-between">
-          <Button onClick={() => setShowSidebar(!showSidebar)} variant="outline">
-            {showSidebar ? 'Hide Filters' : 'Show Filters'}
-          </Button>
-
-          {/* Search Input */}
-          <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent w-64"
+    <div className="bg-gray-50 mt-20">
+      <div className={`container mx-auto px-4 sm:px-6 lg:px-12 py-4 sm:py-6 lg:py-8 ${showSidebar ? 'flex flex-col lg:flex-row gap-4 lg:gap-6 xl:gap-9' : ''}`}>
+        {showSidebar && (
+          <div className="lg:w-64 w-full flex-shrink-0">
+            <Sidebar
+              categories={categories}
+              selectedCategories={validSelectedCategories}
+              setSelectedCategories={(cats) => {
+                setSelectedCategories(cats);
+                setCurrentPage(1);
+              }}
+              products={products}
             />
           </div>
-        </div>
-
-        {displayedProducts.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600 text-lg">No products found.</p>
-            <p className="text-gray-500 mt-2">Try adjusting your filters or search terms.</p>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-3 gap-6">
-              {displayedProducts.map((product) => (
-                <Card key={product.id} product={product} />
-              ))}
-            </div>
-
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
-          </>
         )}
-      </section>
+
+        <section className="flex-1">
+          <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+            <Button onClick={() => setShowSidebar(!showSidebar)} variant="outline" className="w-full sm:w-auto">
+              {showSidebar ? 'Hide Filters' : 'Show Filters'}
+            </Button>
+
+            {/* Search Input */}
+            <div className="relative w-full sm:w-64">
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {displayedProducts.length === 0 ? (
+            <div className="text-center py-8 sm:py-12">
+              <p className="text-gray-600 text-base sm:text-lg">No products found.</p>
+              <p className="text-gray-500 mt-2 text-sm sm:text-base">Try adjusting your filters or search terms.</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {displayedProducts.map((product) => (
+                  <Card key={product.id} product={product} />
+                ))}
+              </div>
+
+              <div className="mt-6 sm:mt-8">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            </>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

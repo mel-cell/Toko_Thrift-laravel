@@ -91,6 +91,12 @@ export async function getMetodePembayaran() {
   return Array.isArray(response.data) ? response.data : [];
 }
 
+export async function createMetodePembayaran(metodeData) {
+  const headers = getAuthHeader();
+  const response = await axios.post(`${API_URL}/metode-pembayaran`, metodeData, { headers });
+  return response.data;
+}
+
 
 
 // Pembelian APIs

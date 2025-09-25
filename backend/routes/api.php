@@ -40,6 +40,7 @@ Route::get('/sanctum/csrf-cookie', function () {
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/metode-pembayaran', [PembelianController::class, 'getMetodePembayaran']);
+    Route::post('/metode-pembayaran', [PembelianController::class, 'storeMetodePembayaran']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
 

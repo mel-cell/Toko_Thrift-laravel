@@ -20,6 +20,10 @@ export async function register(userData) {
 export async function login(credentials) {
   try {
     const response = await axios.post(`${API_URL}/login`, credentials);
+    if (response.data.token) {
+      Cookies.set('token', response.data.token, { expires: 7 }); // expires in 7 days
+      Cookies.set('user', JSON.stringify(response.data.user), { expires: 7 });
+    }
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Login failed');

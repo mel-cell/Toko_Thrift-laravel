@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { createPembelian, getMetodePembayaran } from "../lib/api";
 import { isAuthenticated } from "../lib/auth";
 import { useRouter } from "next/navigation";
+import PaymentMethodModal from "./PaymentMethodModal";
 
 function PurchaseModal({ isOpen, onClose, product, quantity = 1, cartItems = null, onPurchaseComplete }) {
   const [formData, setFormData] = useState({
@@ -13,12 +14,7 @@ function PurchaseModal({ isOpen, onClose, product, quantity = 1, cartItems = nul
     catatan: ''
   });
   const [paymentMethods, setPaymentMethods] = useState([]);
-  const [availablePaymentTypes] = useState([
-    { value: 'DANA', label: 'DANA', type: 'digital' },
-    { value: 'OVO', label: 'OVO', type: 'digital' },
-    { value: 'BCA', label: 'BCA', type: 'bank' },
-    { value: 'COD', label: 'Cash on Delivery (COD)', type: 'cash' }
-  ]);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -47,6 +43,11 @@ function PurchaseModal({ isOpen, onClose, product, quantity = 1, cartItems = nul
     }));
   };
 
+  const handlePaymentMethodAdded = async () => {
+    await fetchPaymentMethods();
+    setShowPaymentModal(false);
+  };
+
   const calculateTotal = () => {
     if (cartItems && cartItems.length > 0) {
       // Cart purchase - sum all items
@@ -69,8 +70,8 @@ function PurchaseModal({ isOpen, onClose, product, quantity = 1, cartItems = nul
       return;
     }
 
-    if (!formData.alamat || !formData.metode_pembayaran_id) {
-      setError('Please fill in all required fields');
+    if (!formData.alamat || !formData.metode_pembayaran_id || formData.metode_pembayaran_id === 'add_new') {
+      setError('Please fill in all required fields and select a valid payment method');
       return;
     }
 
@@ -87,7 +88,7 @@ function PurchaseModal({ isOpen, onClose, product, quantity = 1, cartItems = nul
         pembelianData = {
           user_id: user.id,
           alamat: formData.alamat,
-          metode_pembayaran_id: parseInt(formData.metode_pembayaran_id),
+          metode_pembayaran_id: formData.metode_pembayaran_id,
           catatan: formData.catatan,
           items: cartItems.map(item => ({
             pakaian_id: item.id,
@@ -103,7 +104,7 @@ function PurchaseModal({ isOpen, onClose, product, quantity = 1, cartItems = nul
         pembelianData = {
           user_id: user.id,
           alamat: formData.alamat,
-          metode_pembayaran_id: parseInt(formData.metode_pembayaran_id),
+          metode_pembayaran_id: formData.metode_pembayaran_id,
           catatan: formData.catatan,
           items: [{
             pakaian_id: product.id,
@@ -258,22 +259,27 @@ function PurchaseModal({ isOpen, onClose, product, quantity = 1, cartItems = nul
                   </optgroup>
                 )}
 
-                {/* Available Payment Types */}
-                <optgroup label="Available Payment Methods">
-                  {availablePaymentTypes.map((type) => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
-                  ))}
-                </optgroup>
+                {/* Option to add new payment method */}
+                <option value="add_new">+ Add New Payment Method</option>
               </select>
 
+              {/* Add New Payment Method Button */}
+              {formData.metode_pembayaran_id === 'add_new' && (
+                <div className="mt-3">
+                  <Button
+                    type="button"
+                    onClick={() => setShowPaymentModal(true)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Add New Payment Method
+                  </Button>
+                </div>
+              )}
+
               {/* Account Number Display */}
-              {formData.metode_pembayaran_id && (() => {
+              {formData.metode_pembayaran_id && formData.metode_pembayaran_id !== 'add_new' && (() => {
                 // Check if it's a saved payment method
                 const selectedMethod = paymentMethods.find(m => m.metode_pembayaran_id === formData.metode_pembayaran_id);
-                // Check if it's an available payment type
-                const selectedType = availablePaymentTypes.find(t => t.value === formData.metode_pembayaran_id);
 
                 if (selectedMethod && selectedMethod.metode_pembayaran_jenis !== 'COD' && selectedMethod.metode_pembayaran_nomor) {
                   return (
@@ -288,24 +294,6 @@ function PurchaseModal({ isOpen, onClose, product, quantity = 1, cartItems = nul
                           </p>
                           <p className="text-xs text-blue-600 mt-1">
                             Please transfer to this {selectedMethod.metode_pembayaran_jenis} account to complete your purchase
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                } else if (selectedType && selectedType.type !== 'cash') {
-                  return (
-                    <div className="mt-3 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                      <div className="flex items-center space-x-2">
-                        <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                        </svg>
-                        <div>
-                          <p className="text-sm font-medium text-yellow-800">
-                            <strong>Payment Method:</strong> {selectedType.label}
-                          </p>
-                          <p className="text-xs text-yellow-600 mt-1">
-                            Please prepare your {selectedType.label} account for payment
                           </p>
                         </div>
                       </div>
@@ -360,6 +348,13 @@ function PurchaseModal({ isOpen, onClose, product, quantity = 1, cartItems = nul
           </form>
         </div>
       </div>
+
+      {/* Payment Method Modal */}
+      <PaymentMethodModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onPaymentMethodAdded={handlePaymentMethodAdded}
+      />
     </div>
   );
 }

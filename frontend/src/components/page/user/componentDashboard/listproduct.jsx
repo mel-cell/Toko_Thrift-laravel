@@ -74,10 +74,10 @@ function Sidebar({ categories, selectedCategories, setSelectedCategories, produc
   };
 
   return (
-    <aside className="w-64 bg-white rounded-lg shadow p-6">
+    <aside className="w-full md:w-64 bg-white rounded-lg shadow p-4 md:p-6">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex items-center justify-between w-full text-lg font-semibold mb-4"
+        className="flex items-center justify-between w-full text-base md:text-lg font-semibold mb-4"
       >
         Category
         <FaChevronDown className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
@@ -150,26 +150,26 @@ function Card({ product }) {
 
   return (
     <Link href={`/shop/${product.id}`} className="block">
-      <div className="bg-white rounded-lg shadow p-4 flex flex-col h-100 hover:shadow-lg transition-shadow duration-300">
+      <div className="bg-white rounded-lg shadow p-3 md:p-4 flex flex-col h-full hover:shadow-lg transition-shadow duration-300">
         <div className="relative">
           <img
             src={product.gambar_url || '/placeholder.jpg'}
             alt={product.nama}
-            className="w-full h-55 object-contain rounded"
+            className="w-full h-40 md:h-48 lg:h-55 object-contain rounded"
           />
           <span className="absolute top-2 right-2 bg-gray-200 text-xs px-2 py-1 rounded">
             {product.kategori?.nama || 'No Category'}
           </span>
         </div>
-        <h3 className="mt-2 font-semibold text-black">{product.nama}</h3>
-        <p className="mt-1 font-bold text-black">Rp {parseInt(product.harga).toLocaleString()}</p>
+        <h3 className="mt-2 font-semibold text-black text-sm md:text-base line-clamp-2">{product.nama}</h3>
+        <p className="mt-1 font-bold text-black text-sm md:text-base">Rp {parseInt(product.harga).toLocaleString()}</p>
         <div className="mt-2 flex items-center">
           <StarRating rating={4} />
-          <span className="ml-2 text-sm text-gray-600">4.0 (10 reviews)</span>
+          <span className="ml-2 text-xs md:text-sm text-gray-600">4.0 (10 reviews)</span>
         </div>
-        <div className="mt-4 flex space-x-2">
+        <div className="mt-3 md:mt-4 flex flex-col sm:flex-row gap-2">
          <AuthButton
-                       className="flex-1 bg-gray-950 text-white py-3 px-6 rounded-lg hover:bg-gray-800 transition-colors font-medium"
+                       className="flex-1 bg-gray-950 text-white py-2 md:py-3 px-3 md:px-6 rounded-lg hover:bg-gray-800 transition-colors font-medium text-sm md:text-base"
                        onClick={buyNow}
                        requireAuth={true}
                        fallbackText="Login to Buy"
@@ -177,7 +177,7 @@ function Card({ product }) {
                        Buy Now
                      </AuthButton>
                      <AuthButton
-                       className="flex-1 bg-gray-200 text-gray-800 py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                       className="flex-1 bg-gray-200 text-gray-800 py-2 md:py-3 px-3 md:px-6 rounded-lg hover:bg-gray-300 transition-colors font-medium text-sm md:text-base"
                        onClick={addToCart}
                        requireAuth={true}
                        fallbackText="Login to Add"
@@ -202,26 +202,28 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
   }
 
   return (
-    <div className="mt-6 flex justify-between items-center text-sm text-gray-600">
+    <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-600">
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="hover:underline disabled:opacity-50"
+        className="px-3 py-2 rounded hover:bg-gray-100 disabled:opacity-50 transition-colors"
       >
         Previous
       </button>
-      <div>
+      <div className="flex items-center gap-1">
         {pageNumbers.map((num, idx) =>
           num === "..." ? (
-            <span key={idx} className="mx-1">
+            <span key={idx} className="px-2 py-1">
               ...
             </span>
           ) : (
             <button
               key={num}
               onClick={() => onPageChange(num)}
-              className={`px-2 py-1 rounded mr-1 ${
-                currentPage === num ? "bg-gray-200" : "hover:bg-gray-200"
+              className={`px-2 py-1 md:px-3 md:py-2 rounded transition-colors ${
+                currentPage === num
+                  ? "bg-gray-200 text-gray-900"
+                  : "hover:bg-gray-100"
               }`}
             >
               {num}
@@ -232,7 +234,7 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="hover:underline disabled:opacity-50"
+        className="px-3 py-2 rounded hover:bg-gray-100 disabled:opacity-50 transition-colors"
       >
         Next
       </button>
@@ -317,43 +319,47 @@ export default function ListProduct({ searchTerm = '' }) {
   }
 
   return (
-    <div className={`container mx-auto px-12 py-8 ${showSidebar ? 'flex space-x-9' : ''}`}>
+    <div className={`container mx-auto px-4 sm:px-6 lg:px-12 py-6 md:py-8 ${showSidebar ? 'flex flex-col lg:flex-row gap-6 lg:gap-9' : ''}`}>
       {showSidebar && (
-        <Sidebar
-          categories={categories}
-          selectedCategories={selectedCategories}
-          setSelectedCategories={(cats) => {
-            setSelectedCategories(cats);
-            setCurrentPage(1);
-          }}
-          products={products}
-        />
+        <div className="lg:flex-shrink-0">
+          <Sidebar
+            categories={categories}
+            selectedCategories={selectedCategories}
+            setSelectedCategories={(cats) => {
+              setSelectedCategories(cats);
+              setCurrentPage(1);
+            }}
+            products={products}
+          />
+        </div>
       )}
 
       <section className="flex-1">
-        <div className="mb-4">
-          <Button onClick={() => setShowSidebar(!showSidebar)} variant="outline">
+        <div className="mb-4 flex justify-between items-center">
+          <Button onClick={() => setShowSidebar(!showSidebar)} variant="outline" className="lg:hidden">
             {showSidebar ? 'Hide Filters' : 'Show Filters'}
           </Button>
         </div>
         {displayedProducts.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600 text-lg">No products found.</p>
-            <p className="text-gray-500 mt-2">Try adjusting your filters or search terms.</p>
+          <div className="text-center py-8 md:py-12">
+            <p className="text-gray-600 text-base md:text-lg">No products found.</p>
+            <p className="text-gray-500 mt-2 text-sm md:text-base">Try adjusting your filters or search terms.</p>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {displayedProducts.map((product) => (
                 <Card key={product.id} product={product} />
               ))}
             </div>
 
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
+            <div className="mt-6 md:mt-8">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
           </>
         )}
       </section>

@@ -68,24 +68,24 @@ function ProductCard({ product }) {
   };
 
   return (
-    <div className="min-w-[420px] bg-white rounded-lg shadow p-4 flex-shrink-0 h-100 flex flex-col">
+    <div className="w-full sm:w-80 md:w-96 bg-white rounded-lg shadow p-3 md:p-4 flex-shrink-0 flex flex-col">
       <div className="relative">
         <img
           src={product.gambar_url || '/placeholder.jpg'}
           alt={product.nama}
-          className="w-full h-48 object-contain rounded"
+          className="w-full h-40 md:h-48 object-contain rounded"
         />
         <span className="absolute top-2 right-2 bg-gray-200 text-xs px-2 py-1 rounded">
           {product.kategori?.nama || 'No Category'}
         </span>
       </div>
-      <h3 className="mt-2 font-semibold">{product.nama}</h3>
+      <h3 className="mt-2 font-semibold text-sm md:text-base line-clamp-2">{product.nama}</h3>
       <StarRating rating={4} />
-      <p className="text-sm text-gray-500">4.0 (10 reviews)</p>
-      <p className="mt-1 font-bold">Rp {parseInt(product.harga).toLocaleString()}</p>
-      <div className="mt-auto flex space-x-2">
+      <p className="text-xs md:text-sm text-gray-500">4.0 (10 reviews)</p>
+      <p className="mt-1 font-bold text-sm md:text-base">Rp {parseInt(product.harga).toLocaleString()}</p>
+      <div className="mt-auto flex flex-col sm:flex-row gap-2">
         <AuthButton
-          className="flex-1 bg-gray-950 text-white py-3 px-6 rounded-lg hover:bg-gray-800 transition-colors font-medium"
+          className="flex-1 bg-gray-950 text-white py-2 md:py-3 px-3 md:px-6 rounded-lg hover:bg-gray-800 transition-colors font-medium text-sm md:text-base"
           onClick={buyNow}
           requireAuth={true}
           fallbackText="Login to Buy"
@@ -93,10 +93,11 @@ function ProductCard({ product }) {
           Buy Now
         </AuthButton>
         <AuthButton
-          className="flex-1 bg-gray-200 text-gray-800 py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+          className="flex-1 bg-gray-200 text-gray-800 py-2 md:py-3 px-3 md:px-6 rounded-lg hover:bg-gray-300 transition-colors font-medium text-sm md:text-base"
           onClick={addToCart}
           requireAuth={true}
           fallbackText="Login to Add"
+          showNotification={false}
         >
           Add To Cart
         </AuthButton>
@@ -138,12 +139,12 @@ export default function RecommendationProduct() {
 
   if (loading) {
     return (
-      <section className="max-w-7xl mx-auto px-4 py-8">
-        <h2 className="text-[30px] font-semibold mb-4">Explore our recommendations</h2>
-        <div className="flex space-x-6 overflow-x-auto">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+        <h2 className="text-2xl md:text-3xl font-semibold mb-4">Explore our recommendations</h2>
+        <div className="flex gap-4 md:gap-6 overflow-x-auto">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="min-w-[420px] bg-white rounded-lg shadow p-4 animate-pulse">
-              <div className="h-48 bg-gray-200 rounded mb-4"></div>
+            <div key={i} className="w-full sm:w-80 md:w-96 bg-white rounded-lg shadow p-3 md:p-4 animate-pulse flex-shrink-0">
+              <div className="h-40 md:h-48 bg-gray-200 rounded mb-4"></div>
               <div className="h-4 bg-gray-200 rounded mb-2"></div>
               <div className="h-4 bg-gray-200 rounded w-2/3"></div>
             </div>
@@ -154,19 +155,19 @@ export default function RecommendationProduct() {
   }
 
   return (
-    <section className="max-w-7xl mx-auto px-4 py-8">
-      <h2 className="text-[30px] font-semibold mb-4">Explore our recommendations</h2>
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+      <h2 className="text-2xl md:text-3xl font-semibold mb-4">Explore our recommendations</h2>
       <div className="relative">
         <button
           aria-label="Scroll Left"
           onClick={() => scroll("left")}
-          className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-200 rounded-full p-2 shadow hover:bg-gray-300 z-10"
+          className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-200 rounded-full p-2 shadow hover:bg-gray-300 z-10 hidden sm:block"
         >
           &#8592;
         </button>
         <div
           ref={scrollRef}
-          className="flex space-x-6 overflow-x-auto scrollbar-hide scroll-smooth"
+          className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide scroll-smooth"
         >
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
@@ -175,7 +176,7 @@ export default function RecommendationProduct() {
         <button
           aria-label="Scroll Right"
           onClick={() => scroll("right")}
-          className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-200 rounded-full p-2 shadow hover:bg-gray-300 z-10"
+          className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-200 rounded-full p-2 shadow hover:bg-gray-300 z-10 hidden sm:block"
         >
           &#8594;
         </button>

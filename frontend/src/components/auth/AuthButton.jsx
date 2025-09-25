@@ -12,10 +12,13 @@ export default function AuthButton({
   requireAuth = true,
   redirectTo = '/login',
   fallbackText = 'Login Required',
+  showNotification = false,
+  notificationMessage = 'Action completed successfully!',
   ...props
 }) {
   const router = useRouter();
   const [isAuth, setIsAuth] = useState(false);
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
     setIsAuth(isAuthenticated());
@@ -29,7 +32,13 @@ export default function AuthButton({
     }
 
     if (onClick && !disabled) {
-      onClick(e);
+      const result = onClick(e);
+
+      // Show notification if enabled and action was successful
+      if (showNotification && result !== false) {
+        setNotification(notificationMessage);
+        setTimeout(() => setNotification(null), 3000);
+      }
     }
   };
 
@@ -47,13 +56,22 @@ export default function AuthButton({
   }
 
   return (
-    <button
-      className={className}
-      onClick={handleClick}
-      disabled={disabled}
-      {...props}
-    >
-      {children}
-    </button>
+    <>
+      <button
+        className={className}
+        onClick={handleClick}
+        disabled={disabled}
+        {...props}
+      >
+        {children}
+      </button>
+
+      {/* Notification */}
+      {notification && (
+        <div className="fixed top-4 right-4 z-50 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg shadow-lg">
+          {notification}
+        </div>
+      )}
+    </>
   );
 }

@@ -1,18 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { getMetodePembayaran, updateAkun } from "../../../lib/api";
+import { getMetodePembayaran } from "../../../lib/api";
 import { isAuthenticated } from "../../../lib/auth";
 import { useRouter } from "next/navigation";
+import PaymentMethodModal from "../../../components/PaymentMethodModal";
 
 export default function PaymentMethods() {
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({
-    metode_pembayaran_jenis: '',
-    metode_pembayaran_nomor: ''
-  });
+  const [showModal, setShowModal] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -35,135 +32,79 @@ export default function PaymentMethods() {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!form.metode_pembayaran_jenis || !form.metode_pembayaran_nomor) {
-      alert('Please fill in all fields');
-      return;
-    }
-
-    try {
-      // For now, we'll just show a message since we don't have a create payment method endpoint
-      alert('Payment method added successfully! (This is a demo - actual implementation would save to backend)');
-      setShowForm(false);
-      setForm({ metode_pembayaran_jenis: '', metode_pembayaran_nomor: '' });
-      // In a real implementation, you would call an API to create the payment method
-      // fetchPaymentMethods(); // Refresh the list
-    } catch (error) {
-      console.error('Error adding payment method:', error);
-      alert('Failed to add payment method');
-    }
+  const handlePaymentMethodAdded = () => {
+    fetchPaymentMethods();
+    setShowModal(false);
   };
 
-  const handleDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this payment method?')) {
-      try {
-        // In a real implementation, you would call an API to delete the payment method
-        alert('Payment method deleted successfully! (This is a demo)');
-        // fetchPaymentMethods(); // Refresh the list
-      } catch (error) {
-        console.error('Error deleting payment method:', error);
-        alert('Failed to delete payment method');
-      }
-    }
-  };
 
-  if (loading) return <div className="container mx-auto p-4">Loading payment methods...</div>;
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-20">
+        <div className="max-w-4xl mx-auto">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-20 bg-gray-200 rounded"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-4 mt-20">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-20">
       <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Payment Methods</h1>
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Payment Methods</h1>
           <button
-            onClick={() => setShowForm(!showForm)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            onClick={() => setShowModal(true)}
+            className="w-full sm:w-auto bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors font-medium"
           >
-            {showForm ? 'Cancel' : 'Add Payment Method'}
+            Add Payment Method
           </button>
         </div>
-
-        {showForm && (
-          <div className="bg-white p-6 rounded shadow mb-6">
-            <h2 className="text-xl font-semibold mb-4">Add New Payment Method</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Payment Type
-                </label>
-                <select
-                  value={form.metode_pembayaran_jenis}
-                  onChange={(e) => setForm({...form, metode_pembayaran_jenis: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  <option value="">Select payment type</option>
-                  <option value="DANA">DANA</option>
-                  <option value="OVO">OVO</option>
-                  <option value="BCA">BCA</option>
-                  <option value="COD">Cash on Delivery (COD)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Account Number / Phone Number *
-                </label>
-                <input
-                  type="text"
-                  value={form.metode_pembayaran_nomor}
-                  onChange={(e) => setForm({...form, metode_pembayaran_nomor: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your account number or phone number (required for digital payments)"
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  This number will be displayed to customers when they select your payment method
-                </p>
-              </div>
-
-              <div className="flex space-x-2">
-                <button
-                  type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                  Add Payment Method
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
+ 
+        {/* Add Payment Method Modal */}
+        {showModal && (
+          <PaymentMethodModal
+            isOpen={showModal}
+            onClose={() => setShowModal(false)}
+            onPaymentMethodAdded={handlePaymentMethodAdded}
+          />
         )}
 
-        <div className="bg-white p-6 rounded shadow">
-          <h2 className="text-xl font-semibold mb-4">Your Payment Methods</h2>
+        {/* Payment Methods List */}
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-900">Your Payment Methods</h2>
 
           {paymentMethods.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <p>No payment methods added yet.</p>
+            <div className="text-center py-8 sm:py-12 text-gray-500">
+              <svg className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+              <p className="text-base sm:text-lg">No payment methods added yet.</p>
               <p className="text-sm mt-2">Add a payment method to make purchases easier.</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="grid gap-3 sm:gap-4">
               {paymentMethods.map((method) => (
-                <div key={method.metode_pembayaran_id} className="border rounded-lg p-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-semibold text-lg">{method.metode_pembayaran_jenis}</h3>
+                <div key={method.metode_pembayaran_id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-base sm:text-lg text-gray-900">{method.metode_pembayaran_jenis}</h3>
                       {method.metode_pembayaran_nomor && (
-                        <p className="text-gray-600">{method.metode_pembayaran_nomor}</p>
+                        <p className="text-gray-600 text-sm sm:text-base mt-1">{method.metode_pembayaran_nomor}</p>
                       )}
                     </div>
                     <button
                       onClick={() => handleDelete(method.metode_pembayaran_id)}
-                      className="text-red-600 hover:text-red-800 text-sm"
+                      className="text-red-600 hover:text-red-800 text-sm font-medium px-3 py-1 rounded hover:bg-red-50 transition-colors"
                     >
                       Delete
                     </button>

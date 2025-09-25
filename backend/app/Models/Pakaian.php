@@ -24,6 +24,11 @@ class Pakaian extends Model
         'pakaian_gambar_url',
     ];
 
+    protected $casts = [
+        'pakaian_harga' => 'integer',
+        'pakaian_stok' => 'integer',
+    ];
+
     public function kategoriPakaian()
     {
         return $this->belongsTo(KategoriPakaian::class, 'pakaian_kategori_pakaian_id', 'kategori_pakaian_id');

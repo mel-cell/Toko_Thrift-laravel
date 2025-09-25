@@ -7,7 +7,7 @@ export default function DashboardLayout({ children }) {
   return (
     <>
       <UserHeader />
-      <main>
+      <main className=" min-h-screen">
         <DashboardPage />
       </main>
       <Footer />

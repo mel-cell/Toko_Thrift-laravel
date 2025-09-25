@@ -18,6 +18,9 @@ class PembelianController extends Controller
     // POST /api/pembelian
     public function store(Request $request)
     {
+        Log::info('Pembelian store request data:', $request->all());
+        Log::info('Auth check: ' . Auth::check());
+
         $validator = Validator::make($request->all(), [
             'alamat' => 'required|string|max:255',
             'metode_pembayaran_id' => 'required|uuid|exists:metode_pembayarans,metode_pembayaran_id',
@@ -28,67 +31,77 @@ class PembelianController extends Controller
         ]);
 
         if ($validator->fails()) {
+            Log::info('Pembelian validation failed:', $validator->errors()->toArray());
             return response()->json(['errors' => $validator->errors()], 422);
         }
-        $user = User::find(Auth::id());
-        
-        // Validate all pakaian exist and calculate total
-        $totalHarga = 0;
-        $pakaians = [];
-        foreach ($request->items as $item) {
-            $pakaian = \App\Models\Pakaian::find($item['pakaian_id']);
-            if (!$pakaian) {
-                return response()->json(['message' => 'Pakaian not found: ' . $item['pakaian_id']], 404);
-            }
-            $pakaians[] = $pakaian;
-            $totalHarga += $pakaian->pakaian_harga * $item['jumlah'];
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
         }
+        Log::info('User ID: ' . $user->user_id);
 
-        // Check stock availability for all items
-        foreach ($request->items as $index => $item) {
-            if ($pakaians[$index]->pakaian_stok < $item['jumlah']) {
-                return response()->json(['message' => 'Insufficient stock for pakaian: ' . $pakaians[$index]->pakaian_nama], 400);
+        try {
+            // Validate all pakaian exist and calculate total
+            $totalHarga = 0;
+            $pakaians = [];
+            foreach ($request->items as $item) {
+                $pakaian = \App\Models\Pakaian::find($item['pakaian_id']);
+                if (!$pakaian) {
+                    return response()->json(['message' => 'Pakaian not found: ' . $item['pakaian_id']], 404);
+                }
+                $pakaians[] = $pakaian;
+                $totalHarga += $pakaian->pakaian_harga * $item['jumlah'];
             }
-        }
 
-        // Use database transaction for atomicity
-        $pembelianId = null;
-        DB::transaction(function () use ($request, $user, $totalHarga, $pakaians, &$pembelianId) {
-            $pembelian = Pembelian::create([
-                'pembelian_id' => Str::uuid(),
-                'pembelian_user_id' => $user->user_id,
-                'pembelian_metode_pembayaran_id' => $request->metode_pembayaran_id,
-                'pembelian_tanggal' => now(),
-                'pembelian_total_harga' => $totalHarga,
-                'pembelian_status' => 'pending',
-                'pembelian_alamat' => $request->alamat,
-                'pembelian_catatan' => $request->catatan,
-            ]);
-            $pembelianId = $pembelian->pembelian_id;
-
+            // Check stock availability for all items
             foreach ($request->items as $index => $item) {
-                PembelianDetail::create([
-                    'pembelian_detail_id' => Str::uuid(),
-                    'pembelian_detail_pembelian_id' => $pembelian->pembelian_id,
-                    'pembelian_detail_pakaian_id' => $item['pakaian_id'],
-                    'pembelian_detail_jumlah' => $item['jumlah'],
-                    'pembelian_detail_total_harga' => $pakaians[$index]->pakaian_harga * $item['jumlah'],
-                ]);
-
-                // Reduce stock
-                $pakaians[$index]->update([
-                    'pakaian_stok' => (int)$pakaians[$index]->pakaian_stok - $item['jumlah']
-                ]);
+                if ($pakaians[$index]->pakaian_stok < $item['jumlah']) {
+                    return response()->json(['message' => 'Insufficient stock for pakaian: ' . $pakaians[$index]->pakaian_nama], 400);
+                }
             }
-        });
 
-        Log::info('Purchase created', [
-            'user_id' => $user->user_id,
-            'total_harga' => $totalHarga,
-            'pembelian_id' => $pembelianId
-        ]);
+            // Use database transaction for atomicity
+            $pembelianId = null;
+            DB::transaction(function () use ($request, $user, $totalHarga, $pakaians, &$pembelianId) {
+                $pembelian = Pembelian::create([
+                    'pembelian_id' => Str::uuid(),
+                    'pembelian_user_id' => $user->user_id,
+                    'pembelian_metode_pembayaran_id' => $request->metode_pembayaran_id,
+                    'pembelian_tanggal' => now(),
+                    'pembelian_total_harga' => $totalHarga,
+                    'pembelian_status' => 'pending',
+                    'pembelian_alamat' => $request->alamat,
+                    'pembelian_catatan' => $request->catatan,
+                ]);
+                $pembelianId = $pembelian->pembelian_id;
 
-        return response()->json(['message' => 'Pembelian created successfully'], 201);
+                foreach ($request->items as $index => $item) {
+                    PembelianDetail::create([
+                        'pembelian_detail_id' => Str::uuid(),
+                        'pembelian_detail_pembelian_id' => $pembelian->pembelian_id,
+                        'pembelian_detail_pakaian_id' => $item['pakaian_id'],
+                        'pembelian_detail_jumlah' => $item['jumlah'],
+                        'pembelian_detail_total_harga' => $pakaians[$index]->pakaian_harga * $item['jumlah'],
+                    ]);
+
+                    // Reduce stock
+                    $pakaians[$index]->update([
+                        'pakaian_stok' => (int)$pakaians[$index]->pakaian_stok - $item['jumlah']
+                    ]);
+                }
+            });
+
+            Log::info('Purchase created', [
+                'user_id' => $user->user_id,
+                'total_harga' => $totalHarga,
+                'pembelian_id' => $pembelianId
+            ]);
+
+            return response()->json(['message' => 'Pembelian created successfully'], 201);
+        } catch (\Exception $e) {
+            Log::error('Pembelian store exception: ' . $e->getMessage());
+            return response()->json(['message' => 'Internal Server Error', 'error' => $e->getMessage()], 500);
+        }
     }
 
     // GET /api/pembelian
@@ -202,6 +215,36 @@ class PembelianController extends Controller
             ->select('metode_pembayaran_id', 'metode_pembayaran_jenis', 'metode_pembayaran_nomor')
             ->get();
         return response()->json($metodePembayaran);
+    }
+
+    // POST /api/metode-pembayaran (Protected)
+    public function storeMetodePembayaran(Request $request)
+    {
+        Log::info('Received data for payment method: ', $request->all());
+
+        $validator = Validator::make($request->all(), [
+            'metode_pembayaran_jenis' => 'required|string|in:DANA,OVO,BCA,COD',
+            'metode_pembayaran_nomor' => 'required|string|max:100',
+        ]);
+
+        if ($validator->fails()) {
+            Log::info('Validation failed: ', $validator->errors()->toArray());
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $user = Auth::user();
+
+        $metodePembayaran = new MetodePembayaran();
+        $metodePembayaran->metode_pembayaran_id = Str::uuid();
+        $metodePembayaran->metode_pembayaran_user_id = $user->user_id;
+        $metodePembayaran->metode_pembayaran_jenis = $request->metode_pembayaran_jenis;
+        $metodePembayaran->metode_pembayaran_nomor = $request->metode_pembayaran_nomor;
+        $metodePembayaran->save();
+
+        return response()->json([
+            'message' => 'Payment method created successfully',
+            'metode_pembayaran' => $metodePembayaran
+        ], 201);
     }
 
     // GET /api/admin/pembelian (Admin only)

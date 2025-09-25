@@ -5,9 +5,7 @@ import Footer from "../../../components/footer/footer";
 export default function ShopLayout({ children }) {
   return (
     <>
-      <UserHeader />
       <main>{children}</main>
-      <Footer />
     </>
   );
 }
