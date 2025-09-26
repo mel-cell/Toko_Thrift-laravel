@@ -6,11 +6,11 @@ import DashboardPage from "./page";
 export default function DashboardLayout({ children }) {
   return (
     <>
-      <UserHeader />
+    <UserHeader />
       <main className=" min-h-screen">
         <DashboardPage />
       </main>
-      <Footer />
+     <Footer /> 
     </>
   );
 }

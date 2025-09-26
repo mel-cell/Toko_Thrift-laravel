@@ -16,7 +16,7 @@ return new class extends Migration
             $table->uuid('pembelian_detail_pembelian_id');
             $table->uuid('pembelian_detail_pakaian_id');
             $table->integer('pembelian_detail_jumlah');
-            $table->integer('pembelian_detail_total_harga');
+            $table->decimal('pembelian_detail_total_harga', 10, 2);
             $table->timestamps();
 
             $table->foreign('pembelian_detail_pembelian_id')->references('pembelian_id')->on('pembelians')->onDelete('cascade');

@@ -8,9 +8,49 @@ use App\Models\MetodePembayaran;
 use App\Http\Resources\PakaianResource;
 use Illuminate\Http\Request;
 
+/**
+ * @OA\Tag(
+ *     name="Products",
+ *     description="API endpoints for products (pakaian)"
+ * )
+ */
 class PakaianController extends Controller
 {
-    // GET /api/pakaian
+    /**
+     * @OA\Get(
+     *     path="/pakaian",
+     *     summary="Get list of products",
+     *     tags={"Products"},
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Search term for name, description, or category",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="kategori",
+     *         in="query",
+     *         description="Filter by category name",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Items per page",
+     *         @OA\Schema(type="integer", default=10)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of products",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/PakaianResource")),
+     *             @OA\Property(property="links", type="object"),
+     *             @OA\Property(property="meta", type="object")
+     *         )
+     *     )
+     * )
+     */
     public function index(Request $request)
     {
         $query = Pakaian::with('kategoriPakaian');
@@ -42,7 +82,32 @@ class PakaianController extends Controller
         return PakaianResource::collection($pakaians);
     }
 
-    // GET /api/pakaian/{id}
+    /**
+     * @OA\Get(
+     *     path="/pakaian/{id}",
+     *     summary="Get product by ID",
+     *     tags={"Products"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Product ID",
+     *         @OA\Schema(type="string", format="uuid")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Product details",
+     *         @OA\JsonContent(ref="#/components/schemas/PakaianResource")
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Product not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Pakaian not found")
+     *         )
+     *     )
+     * )
+     */
     public function show($id)
     {
         $pakaian = Pakaian::with('kategoriPakaian')->find($id);

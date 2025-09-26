@@ -25,7 +25,7 @@ class Pakaian extends Model
     ];
 
     protected $casts = [
-        'pakaian_harga' => 'integer',
+        'pakaian_harga' => 'decimal:2',
         'pakaian_stok' => 'integer',
     ];
 

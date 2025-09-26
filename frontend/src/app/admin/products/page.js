@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAdminPakaian, deletePakaian } from '@/lib/api';
+import { getAdminPakaian, deletePakaian, getKategoriPakaian } from '@/lib/api';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DeleteConfirmationModal } from "@/components/admin/DeleteConfirmationModal";
 import { EditProductModal } from "@/components/admin/EditProductModal";
 import { AddProductModal } from "@/components/admin/AddProductModal";
@@ -11,6 +13,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -21,12 +24,18 @@ export default function AdminProductsPage() {
   const [productToEditId, setProductToEditId] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
+  const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+
   const { toast } = useToast();
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const data = await getAdminPakaian();
+      const params = {};
+      if (search) params.search = search;
+      if (categoryFilter && categoryFilter !== "all") params.category = categoryFilter;
+      const data = await getAdminPakaian(params);
       console.log("Fetched products:", data); // Debugging line
       setProducts(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -42,9 +51,19 @@ export default function AdminProductsPage() {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const data = await getKategoriPakaian();
+      setCategories(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
+    }
+  };
+
   useEffect(() => {
+    fetchCategories();
     fetchProducts();
-  }, []);
+  }, [search, categoryFilter]);
 
   const handleDeleteClick = (productId) => {
     setProductToDeleteId(productId);
@@ -100,6 +119,27 @@ export default function AdminProductsPage() {
         <h1 className="text-3xl font-bold">Products</h1>
         <Button onClick={() => setShowAddModal(true)}>Add New Product</Button>
       </div>
+      <div className="flex gap-4 mb-4">
+        <Input
+          placeholder="Search products..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-sm"
+        />
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="max-w-sm">
+            <SelectValue placeholder="Filter by category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {categories.map(category => (
+              <SelectItem key={category.kategori_pakaian_id} value={category.kategori_pakaian_id}>
+                {category.kategori_pakaian_nama}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
@@ -112,14 +152,14 @@ export default function AdminProductsPage() {
         </TableHeader>
         <TableBody>
           {products.map(product => (
-            <TableRow key={product.id}>
+            <TableRow key={product.pakaian_id}>
               <TableCell>{product.pakaian_nama}</TableCell>
-              <TableCell>{product.kategori_pakaian?.kategori_nama || 'N/A'}</TableCell>
-              <TableCell>{product.pakaian_harga}</TableCell>
+              <TableCell>{product.kategori_pakaian?.kategori_pakaian_nama || 'N/A'}</TableCell>
+              <TableCell>Rp {parseInt(product.pakaian_harga).toLocaleString()}</TableCell>
               <TableCell>{product.pakaian_stok}</TableCell>
               <TableCell className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => handleEditClick(product.id)}>Edit</Button>
-                <Button variant="destructive" size="sm" onClick={() => handleDeleteClick(product.id)}>Delete</Button>
+                <Button variant="outline" size="sm" onClick={() => handleEditClick(product.pakaian_id)}>Edit</Button>
+                <Button variant="destructive" size="sm" onClick={() => handleDeleteClick(product.pakaian_id)}>Delete</Button>
               </TableCell>
             </TableRow>
           ))}
@@ -131,7 +171,7 @@ export default function AdminProductsPage() {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDeleteConfirm}
         itemType="product"
-        itemName={products.find(p => p.id === productToDeleteId)?.pakaian_nama || "this product"}
+        itemName={products.find(p => p.pakaian_id === productToDeleteId)?.pakaian_nama || "this product"}
         isDeleting={isDeleting}
       />
 

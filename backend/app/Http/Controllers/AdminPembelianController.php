@@ -12,6 +12,18 @@ class AdminPembelianController extends Controller
     {
         $query = Pembelian::with('user', 'metodePembayaran', 'pembelianDetails.pakaian');
 
+        // Search by user name or product name
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($userQuery) use ($search) {
+                    $userQuery->where('user_fullname', 'like', "%{$search}%");
+                })->orWhereHas('pembelianDetails.pakaian', function ($pakaianQuery) use ($search) {
+                    $pakaianQuery->where('pakaian_nama', 'like', "%{$search}%");
+                });
+            });
+        }
+
         // Filter by status
         if ($request->has('status')) {
             $query->where('pembelian_status', $request->input('status'));

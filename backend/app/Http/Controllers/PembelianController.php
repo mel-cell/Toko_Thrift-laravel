@@ -61,8 +61,7 @@ class PembelianController extends Controller
             }
 
             // Use database transaction for atomicity
-            $pembelianId = null;
-            DB::transaction(function () use ($request, $user, $totalHarga, $pakaians, &$pembelianId) {
+            $pembelian = DB::transaction(function () use ($request, $user, $totalHarga, $pakaians) {
                 $pembelian = Pembelian::create([
                     'pembelian_id' => Str::uuid(),
                     'pembelian_user_id' => $user->user_id,
@@ -73,31 +72,33 @@ class PembelianController extends Controller
                     'pembelian_alamat' => $request->alamat,
                     'pembelian_catatan' => $request->catatan,
                 ]);
-                $pembelianId = $pembelian->pembelian_id;
 
                 foreach ($request->items as $index => $item) {
+                    $subtotal = $pakaians[$index]->pakaian_harga * $item['jumlah'];
+
                     PembelianDetail::create([
                         'pembelian_detail_id' => Str::uuid(),
                         'pembelian_detail_pembelian_id' => $pembelian->pembelian_id,
                         'pembelian_detail_pakaian_id' => $item['pakaian_id'],
                         'pembelian_detail_jumlah' => $item['jumlah'],
-                        'pembelian_detail_total_harga' => $pakaians[$index]->pakaian_harga * $item['jumlah'],
+                        'pembelian_detail_total_harga' => $subtotal,
                     ]);
 
                     // Reduce stock
-                    $pakaians[$index]->update([
-                        'pakaian_stok' => (int)$pakaians[$index]->pakaian_stok - $item['jumlah']
-                    ]);
+                    $pakaians[$index]->decrement('pakaian_stok', $item['jumlah']);
                 }
+
+                return $pembelian;
             });
 
-            Log::info('Purchase created', [
-                'user_id' => $user->user_id,
-                'total_harga' => $totalHarga,
-                'pembelian_id' => $pembelianId
-            ]);
+            Log::info('Pembelian created successfully:', $pembelian->toArray());
 
-            return response()->json(['message' => 'Pembelian created successfully'], 201);
+            $pembelian->load('pembelianDetails.pakaian', 'metodePembayaran');
+
+            return response()->json([
+                'message' => 'Pembelian created successfully',
+                'pembelian' => $pembelian
+            ], 201);
         } catch (\Exception $e) {
             Log::error('Pembelian store exception: ' . $e->getMessage());
             return response()->json(['message' => 'Internal Server Error', 'error' => $e->getMessage()], 500);
@@ -105,12 +106,27 @@ class PembelianController extends Controller
     }
 
     // GET /api/pembelian
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-        $pembelians = Pembelian::with('pembelianDetails.pakaian')
-            ->where('pembelian_user_id', $user->user_id)
-            ->get();
+        $query = Pembelian::with(['pembelianDetails.pakaian', 'metodePembayaran'])
+            ->where('pembelian_user_id', $user->user_id);
+
+        // Search by product name
+        if ($search = $request->query('search')) {
+            $query->whereHas('pembelianDetails.pakaian', function ($q) use ($search) {
+                $q->where('pakaian_nama', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by payment method
+        if ($paymentMethod = $request->query('payment_method')) {
+            $query->whereHas('metodePembayaran', function ($q) use ($paymentMethod) {
+                $q->where('metode_pembayaran_jenis', $paymentMethod);
+            });
+        }
+
+        $pembelians = $query->get();
 
         return response()->json($pembelians);
     }
@@ -119,7 +135,7 @@ class PembelianController extends Controller
     public function show($id)
     {
         $user = Auth::user();
-        $pembelian = Pembelian::with('pembelianDetails.pakaian')
+        $pembelian = Pembelian::with(['pembelianDetails.pakaian', 'metodePembayaran'])
             ->where('pembelian_user_id', $user->user_id)
             ->where('pembelian_id', $id)
             ->first();

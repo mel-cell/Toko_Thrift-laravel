@@ -169,8 +169,8 @@ function Card({ product }) {
         </div>
         <div className="mt-3 md:mt-4 flex flex-col sm:flex-row gap-2">
          <AuthButton
-                       className="flex-1 bg-gray-950 text-white py-2 md:py-3 px-3 md:px-6 rounded-lg hover:bg-gray-800 transition-colors font-medium text-sm md:text-base"
-                       onClick={buyNow}
+             className="flex-1 bg-gray-950 text-white py-2 md:py-3 px-3 md:px-6 rounded-lg hover:bg-gray-800 transition-colors font-medium text-sm md:text-base"
+               onClick={buyNow}
                        requireAuth={true}
                        fallbackText="Login to Buy"
                      >
@@ -249,22 +249,13 @@ export default function ListProduct({ searchTerm = '' }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [showSidebar, setShowSidebar] = useState(true);
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const productsPerPage = 9;
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const params = debouncedSearchTerm ? { search: debouncedSearchTerm } : {};
         const [pakaianRes, kategoriRes] = await Promise.all([
-          getPakaian(params),
+          getPakaian({ per_page: 1000 }), // Fetch all products
           getKategoriPakaian()
         ]);
         // Handle both direct arrays and paginated responses
@@ -273,7 +264,7 @@ export default function ListProduct({ searchTerm = '' }) {
 
         setProducts(productsData);
         setCategories(categoriesData);
-        setCurrentPage(1); // Reset to first page on search
+        setCurrentPage(1);
       } catch (error) {
         console.error('Error fetching data:', error);
         setProducts([]);
@@ -283,15 +274,29 @@ export default function ListProduct({ searchTerm = '' }) {
       }
     };
     fetchData();
-  }, [debouncedSearchTerm]);
+  }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const productsFilteredBySearch = useMemo(() => {
+    if (!products || !Array.isArray(products)) return [];
+    if (!searchTerm.trim()) return products;
+    const words = searchTerm.trim().toLowerCase().split(/\s+/).filter(word => word.length > 0);
+    return products.filter(p => {
+      const text = (p.nama || '') + ' ' + (p.deskripsi || '') + ' ' + (p.kategori?.nama || '');
+      const lowerText = text.toLowerCase();
+      return words.some(word => lowerText.includes(word));
+    });
+  }, [products, searchTerm]);
 
   const filteredProducts = useMemo(() => {
-    if (!products || !Array.isArray(products)) return [];
-
+    if (!productsFilteredBySearch || !Array.isArray(productsFilteredBySearch)) return [];
     return selectedCategories.length === 0
-      ? products
-      : products.filter((p) => p.kategori?.id && selectedCategories.includes(p.kategori.id));
-  }, [products, selectedCategories]);
+      ? productsFilteredBySearch
+      : productsFilteredBySearch.filter((p) => p.kategori?.id && selectedCategories.includes(p.kategori.id));
+  }, [productsFilteredBySearch, selectedCategories]);
 
   const totalPages = Math.ceil((filteredProducts?.length || 0) / productsPerPage);
 
@@ -329,7 +334,7 @@ export default function ListProduct({ searchTerm = '' }) {
               setSelectedCategories(cats);
               setCurrentPage(1);
             }}
-            products={products}
+            products={productsFilteredBySearch}
           />
         </div>
       )}

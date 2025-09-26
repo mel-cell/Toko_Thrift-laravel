@@ -8,13 +8,16 @@ import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast"; // Assuming useToast is available
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function PurchasesPage() {
   const [purchases, setPurchases] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [currentPurchase, setCurrentPurchase] = useState(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [formData, setFormData] = useState({
     user_id: '',
     pembelian_total_harga: '',
@@ -26,13 +29,16 @@ export default function PurchasesPage() {
   const { toast } = useToast();
 
   const fetchPurchases = async () => {
-    const data = await getAdminPembelian();
+    const params = {};
+    if (search) params.search = search;
+    if (statusFilter && statusFilter !== "all") params.status = statusFilter;
+    const data = await getAdminPembelian(params);
     setPurchases(Array.isArray(data) ? data : []);
   };
 
   useEffect(() => {
     fetchPurchases();
-  }, []);
+  }, [search, statusFilter]);
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
@@ -73,7 +79,7 @@ export default function PurchasesPage() {
   const handleSavePurchase = async () => {
     try {
       if (currentPurchase) {
-        await updateAdminPembelian(currentPurchase.id, formData);
+        await updateAdminPembelian(currentPurchase.pembelian_id, formData);
         toast({
           title: "Success",
           description: "Purchase updated successfully.",
@@ -98,7 +104,7 @@ export default function PurchasesPage() {
 
   const handleConfirmDelete = async () => {
     try {
-      await deleteAdminPembelian(currentPurchase.id);
+      await deleteAdminPembelian(currentPurchase.pembelian_id);
       toast({
         title: "Success",
         description: "Purchase deleted successfully.",
@@ -120,6 +126,27 @@ export default function PurchasesPage() {
         <h1 className="text-3xl font-bold">Purchases</h1>
         <Button onClick={handleAddClick}>Add New Purchase</Button>
       </div>
+      <div className="flex gap-4 mb-4">
+        <Input
+          placeholder="Search purchases..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-sm"
+        />
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="max-w-sm">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="processing">Processing</SelectItem>
+            <SelectItem value="shipped">Shipped</SelectItem>
+            <SelectItem value="delivered">Delivered</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
@@ -132,13 +159,13 @@ export default function PurchasesPage() {
         </TableHeader>
         <TableBody>
           {purchases.map(purchase => (
-            <TableRow key={purchase.id}>
-              <TableCell>{purchase.user.user_fullname}</TableCell>
-              <TableCell>{purchase.pembelian_total_harga}</TableCell>
+            <TableRow key={purchase.pembelian_id}>
+              <TableCell>{purchase.user?.user_fullname || 'N/A'}</TableCell>
+              <TableCell>Rp {parseInt(purchase.pembelian_total_harga).toLocaleString()}</TableCell>
               <TableCell>{purchase.pembelian_status}</TableCell>
-              <TableCell>{new Date(purchase.created_at).toLocaleDateString()}</TableCell>
+              <TableCell>{new Date(purchase.pembelian_tanggal).toLocaleDateString()}</TableCell>
               <TableCell className="flex gap-2">
-                <Link href={`/admin/purchases/${purchase.id}`}>
+                <Link href={`/admin/purchases/${purchase.pembelian_id}`}>
                   <Button variant="outline" size="sm">View</Button>
                 </Link>
                 <Button variant="outline" size="sm" onClick={() => handleEditClick(purchase)}>Edit</Button>

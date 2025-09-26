@@ -14,6 +14,7 @@ class Pembelian extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'pembelian_id',
         'pembelian_user_id',
         'pembelian_metode_pembayaran_id',
         'pembelian_tanggal',
@@ -21,6 +22,10 @@ class Pembelian extends Model
         'pembelian_status',
         'pembelian_alamat',
         'pembelian_catatan',
+    ];
+
+    protected $casts = [
+        'pembelian_total_harga' => 'decimal:2',
     ];
 
     public function user()

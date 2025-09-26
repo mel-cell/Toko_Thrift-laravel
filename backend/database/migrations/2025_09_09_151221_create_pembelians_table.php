@@ -16,7 +16,7 @@ return new class extends Migration
             $table->uuid('pembelian_user_id');
             $table->uuid('pembelian_metode_pembayaran_id');
             $table->timestamp('pembelian_tanggal');
-            $table->integer('pembelian_total_harga');
+            $table->decimal('pembelian_total_harga', 10, 2);
             $table->timestamps();
 
             $table->foreign('pembelian_user_id')->references('user_id')->on('users')->onDelete('cascade');
@@ -29,6 +29,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pembelians');
+        Schema::table('pembelians', function (Blueprint $table) {
+            $table->integer('pembelian_total_harga')->change();
+        });
     }
 };

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { createPembelian, getMetodePembayaran } from "../lib/api";
-import { isAuthenticated } from "../lib/auth";
+import { isAuthenticated, getCurrentUser } from "../lib/auth";
 import { useRouter } from "next/navigation";
 import PaymentMethodModal from "./PaymentMethodModal";
 
@@ -79,14 +79,19 @@ function PurchaseModal({ isOpen, onClose, product, quantity = 1, cartItems = nul
     setError('');
 
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const user = getCurrentUser();
+
+      if (!user) {
+        setError('User not authenticated');
+        return;
+      }
 
       let pembelianData;
 
       if (cartItems && cartItems.length > 0) {
         // Cart purchase
         pembelianData = {
-          user_id: user.id,
+          user_id: user.user_id,
           alamat: formData.alamat,
           metode_pembayaran_id: formData.metode_pembayaran_id,
           catatan: formData.catatan,
@@ -102,7 +107,7 @@ function PurchaseModal({ isOpen, onClose, product, quantity = 1, cartItems = nul
       } else {
         // Single product purchase
         pembelianData = {
-          user_id: user.id,
+          user_id: user.user_id,
           alamat: formData.alamat,
           metode_pembayaran_id: formData.metode_pembayaran_id,
           catatan: formData.catatan,

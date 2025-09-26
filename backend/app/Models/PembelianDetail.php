@@ -14,10 +14,15 @@ class PembelianDetail extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'pembelian_detail_id',
         'pembelian_detail_pembelian_id',
         'pembelian_detail_pakaian_id',
         'pembelian_detail_jumlah',
         'pembelian_detail_total_harga',
+    ];
+
+    protected $casts = [
+        'pembelian_detail_total_harga' => 'decimal:2',
     ];
 
     public function pembelian()

@@ -116,9 +116,11 @@ export async function createPembelian(pembelianData) {
   return response.data;
 }
 
-export async function getPembelian() {
+export async function getPembelian(params = {}) {
   const headers = getAuthHeader();
-  const response = await axios.get(`${API_URL}/pembelian`, { headers });
+  const queryString = new URLSearchParams(params).toString();
+  const url = queryString ? `${API_URL}/pembelian?${queryString}` : `${API_URL}/pembelian`;
+  const response = await axios.get(url, { headers });
   return response.data;
 }
 
@@ -135,9 +137,9 @@ export async function updateAkun(akunData) {
 }
 
 // Admin APIs
-export async function getAdminPakaian() {
+export async function getAdminPakaian(params = {}) {
   const headers = getAuthHeader();
-  const response = await axios.get(`${API_URL}/admin/pakaian`, { headers });
+  const response = await axios.get(`${API_URL}/admin/pakaian`, { headers, params });
   return response.data;
 }
 
@@ -183,9 +185,9 @@ export async function deleteKategoriPakaian(id) {
   return response.data;
 }
 
-export async function getAdminPembelian() {
+export async function getAdminPembelian(params = {}) {
   const headers = getAuthHeader();
-  const response = await axios.get(`${API_URL}/admin/pembelian`, { headers });
+  const response = await axios.get(`${API_URL}/admin/pembelian`, { headers, params });
   return response.data;
 }
 
@@ -241,5 +243,12 @@ export async function updateAdminUser(id, userData) {
 export async function deleteAdminUser(id) {
   const headers = getAuthHeader();
   const response = await axios.delete(`${API_URL}/admin/users/${id}`, { headers });
+  return response.data;
+}
+
+// Admin Stats
+export async function getAdminStats() {
+  const headers = getAuthHeader();
+  const response = await axios.get(`${API_URL}/admin/stats`, { headers });
   return response.data;
 }

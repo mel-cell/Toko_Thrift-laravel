@@ -1,14 +1,17 @@
 'use client';
 
 import { Sidebar, SidebarProvider, SidebarTrigger, SidebarMenu, SidebarMenuItem, SidebarHeader, SidebarInset } from "@/components/ui/sidebar";
-import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingBag, Users, Settings } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { LayoutDashboard, Package, ShoppingBag, Users, Tags, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { logout } from "@/lib/auth";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useState } from 'react';
 
 export default function AdminLayout({ children }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const getPageTitle = (path) => {
     if (path === '/admin') return 'Dashboard';
@@ -24,26 +27,22 @@ export default function AdminLayout({ children }) {
   const menuItems = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Products', href: '/admin/products', icon: Package },
-    { name: 'purchases', href: '/admin/purchases', icon: ShoppingBag },
-    { name: 'users', href: '/admin/users', icon: Users },
-    { name: 'categories', href: '/admin/categories', icon: Settings },
+    { name: 'Purchases', href: '/admin/purchases', icon: ShoppingBag },
+    { name: 'Users', href: '/admin/users', icon: Users },
+    { name: 'Categories', href: '/admin/categories', icon: Tags },
   ];
+
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
 
   return (
     <SidebarProvider>
       <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
-        <Sidebar>
+        <Sidebar className={`transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-64'}`}>
           <SidebarHeader>
-            <h2 className="text-lg font-semibold">Odama Studio</h2>
-                <button
-                    onClick={logout}
-                    className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                  >
-                    <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    Logout
-                  </button>
+            <h2 className="text-lg font-semibold">{!sidebarCollapsed && "Odama Studio"}</h2>
           </SidebarHeader>
           <SidebarMenu>
             {menuItems.map((item) => {
@@ -61,18 +60,39 @@ export default function AdminLayout({ children }) {
                     )}
                   >
                     <IconComponent className="w-4 h-4" />
-                    {item.name}
+                    {!sidebarCollapsed && item.name}
                   </Link>
                 </SidebarMenuItem>
               );
             })}
+            <SidebarMenuItem>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 w-full rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                {!sidebarCollapsed && "Logout"}
+              </button>
+            </SidebarMenuItem>
           </SidebarMenu>
         </Sidebar>
         <SidebarInset>
-          <div className="p-8 w-full">
-            <SidebarTrigger />
-            <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-gray-100">{pageTitle}</h1>
-            {children}
+          <div className="w-full">
+            <div className="flex items-center justify-between mb-6 px-8 pt-8">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+                >
+                  {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                </button>
+                <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">{pageTitle}</h1>
+              </div>
+              <SidebarTrigger />
+            </div>
+            <div className="px-8 pb-8">
+              {children}
+            </div>
           </div>
         </SidebarInset>
       </div>
